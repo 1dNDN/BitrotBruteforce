@@ -65,7 +65,7 @@ public static class PersistenceManager
                                 pieceOffset)
                             .ToHexaDecimalString());
 
-                    //if(pieceStatus == PieceStatus.Missing)
+                    if(pieceStatus == PieceStatus.Missing)
                     {
                         Console.WriteLine(previousPieceIndex);
                         
