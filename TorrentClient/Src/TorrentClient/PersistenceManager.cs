@@ -360,6 +360,9 @@ public sealed class PersistenceManager : IDisposable
                                     0,
                                     pieceOffset)
                                 .ToHexaDecimalString());
+                        
+                        if(pieceStatus == PieceStatus.Missing)
+                            Console.WriteLine(previousPieceIndex);
 
                         bitField[previousPieceIndex] = pieceStatus;
 
@@ -393,9 +396,9 @@ public sealed class PersistenceManager : IDisposable
 
                 torrentStartOffset = torrentEndOffset;
             }
-
+            
             // last piece
-            bitField[previousPieceIndex] = GetStatus(
+            var status = GetStatus(
                 ignore,
                 download,
                 pieceHashes.ElementAt((int)previousPieceIndex),
@@ -403,6 +406,12 @@ public sealed class PersistenceManager : IDisposable
                         0,
                         pieceOffset)
                     .ToHexaDecimalString());
+
+            if(status == PieceStatus.Missing)
+                Console.WriteLine(previousPieceIndex);
+
+            
+            bitField[previousPieceIndex] = status;
         }
 
         return bitField;

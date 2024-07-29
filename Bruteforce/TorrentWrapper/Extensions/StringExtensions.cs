@@ -30,7 +30,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The hexadecimal string.</param>
     /// <returns>The byte array.</returns>
-    public static byte[] ToByteArray(this string value) =>
+    public static byte[] ToByteArrayFromHex(this string value) =>
         Enumerable.Range(0, value.Length / 2).Select(x => Convert.ToByte(value.Substring(x * 2, 2), 16)).ToArray();
 
     /// <summary>

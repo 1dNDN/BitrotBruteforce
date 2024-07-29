@@ -225,7 +225,7 @@ public sealed class TorrentInfo
                         var tmpBytes = new byte[20];
 
                         System.Array.Copy(info[piecesKey].As<BEncodedString>().TextBytes, i, tmpBytes, 0, tmpBytes.Length);
-
+                        
                         pieceHashes.Add(tmpBytes.ToHexaDecimalString());
                     }
 

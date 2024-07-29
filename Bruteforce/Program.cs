@@ -4,29 +4,33 @@ using System.Diagnostics;
 
 using Bruteforce;
 using Bruteforce.TorrentWrapper;
-
-using TorrentClient;
+using Bruteforce.TorrentWrapper.Extensions;
 
 Console.WriteLine("Hello, World!");
+TorrentInfo.TryLoad(@"C:\Users\nikit\RiderProjects\Bruteforce\Data\orelli.torrent", out var torrent);
 
-var originalBin = File.ReadAllBytes("C:\\Users\\nikit\\Downloads\\Telegram Desktop\\piece_563");
-var originalHash = Utility.StringToByteArray("234210f5c309c17584bec0e70d78f23b06eef7ac");
+var pieces = PersistenceManager.Verify(@"E:\Torrents\fidel_windows_3.1.2", torrent);; // start torrent file
 
-var sw = Stopwatch.StartNew();
+Console.WriteLine($"Похуевило {pieces.Count} частям");
 
-Console.WriteLine(BruteforceParallel.Bruteforce(originalBin, originalHash));
-
-sw.Stop();
-Console.WriteLine($"Elapsed: {sw.Elapsed} for {originalBin.Length} bytes");
-foreach (var b in originalHash)
+foreach (var piece in pieces)
 {
-    Console.Write($"{b} ");
+    foreach (var b in piece.Hash.ToByteArrayFromHex())
+    {
+        Console.Write($"{b} ");
+    }
+    Console.WriteLine();
+    
+    Console.WriteLine($"Хуярим часть номер {piece.Index}");
+    
+    if(!piece.Restoreable)
+        Console.WriteLine("Тут одни нули, хуйня выходит");
+    
+    var sw = Stopwatch.StartNew();
+
+    Console.WriteLine(BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex()));
+
+    sw.Stop();
+    Console.WriteLine($"Elapsed: {sw.Elapsed} for {piece.Bytes.Length} bytes");
+    
 }
-
-TorrentInfo torrent;
-TorrentInfo.TryLoad(@"C:\Users\nikit\RiderProjects\Bruteforce\Data\orelli.torrent", out torrent);
-
-var torrentClient = new Bruteforce.TorrentWrapper.TorrentClient(@"E:\Torrents\fidel_windows_3.1.2");
-
-torrentClient.Verify(); // start torrent client
-torrentClient.Verify(torrent); // start torrent file

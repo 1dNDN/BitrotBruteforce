@@ -7,68 +7,12 @@ namespace Bruteforce.TorrentWrapper;
 /// <summary>
 ///     The persistence manager.
 /// </summary>
-public sealed class PersistenceManager
+public static class PersistenceManager
 {
-    /// <summary>
-    ///     The file info / file stream dictionary.
-    /// </summary>
-    private readonly Dictionary<TorrentFileInfo, FileStream> _files;
-
-    /// <summary>
-    ///     The thread locker.
-    /// </summary>
-    private readonly object _locker = new();
-
-    /// <summary>
-    ///     The piece hashes.
-    /// </summary>
-    private readonly IEnumerable<string> _pieceHashes;
-
-    /// <summary>
-    ///     The piece length.
-    /// </summary>
-    private readonly long _pieceLength;
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="PersistenceManager" /> class.
-    /// </summary>
-    /// <param name="directoryPath">The directory path.</param>
-    /// <param name="pieceLength">Length of the piece.</param>
-    /// <param name="pieceHashes">The piece hashes.</param>
-    /// <param name="files">The files.</param>
-    public PersistenceManager(string directoryPath, long pieceLength, string[] pieceHashes, TorrentFileInfo[] files)
+    public static List<BrokenPiece> Verify(string directoryPath, TorrentInfo torrentInfo)
     {
-        Debug.WriteLine($"creating persistence manager for {Path.GetFullPath(directoryPath)}");
-
-        DirectoryPath = directoryPath;
-        _pieceLength = pieceLength;
-        _pieceHashes = pieceHashes;
-
-        // initialize file handlers
-        _files = new Dictionary<TorrentFileInfo, FileStream>();
-
-        foreach (var file in files)
-        {
-            CreateFile(Path.Combine(DirectoryPath, file.FilePath), file.Length);
-
-            _files.Add(file, new FileStream(Path.Combine(DirectoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.None));
-        }
+        return Verify(directoryPath, torrentInfo.PieceLength, torrentInfo.PieceHashes, torrentInfo.Files);
     }
-
-    /// <summary>
-    ///     Prevents a default instance of the <see cref="PersistenceManager" /> class from being created.
-    /// </summary>
-    private PersistenceManager()
-    {
-    }
-
-    /// <summary>
-    ///     Gets the directory path.
-    /// </summary>
-    /// <value>
-    ///     The directory path.
-    /// </value>
-    public string DirectoryPath { get; }
 
     /// <summary>
     ///     Verifies the specified file if it corresponds with the piece hashes.
@@ -76,76 +20,97 @@ public sealed class PersistenceManager
     /// <returns>
     ///     The bit field.
     /// </returns>
-    public PieceStatus[] Verify()
+    public static List<BrokenPiece> Verify(string directoryPath, long pieceLength, string[] pieceHashes, TorrentFileInfo[] files)
     {
-        var bitField = new PieceStatus[_pieceHashes.Count()];
-        long pieceStart;
-        long pieceEnd;
-        long previousPieceIndex = 0;
-        long torrentStartOffset = 0;
-        long torrentEndOffset;
-        long fileOffset;
-        var pieceData = new byte[_pieceLength];
-        var pieceOffset = 0;
-        var length = 0;
+        var innerFiles = new Dictionary<TorrentFileInfo, FileStream>();
 
-        lock (_locker)
+        foreach (var file in files)
         {
-            foreach (var file in _files)
-            {
-                torrentEndOffset = torrentStartOffset + file.Key.Length;
+            CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
 
-                pieceStart = (torrentStartOffset - torrentStartOffset % _pieceLength) / _pieceLength;
-
-                pieceEnd = (torrentEndOffset - torrentEndOffset % _pieceLength) / _pieceLength;
-                pieceEnd -= torrentEndOffset % _pieceLength == 0
-                    ? 1
-                    : 0;
-
-                Debug.WriteLine($"verifying file {file.Value.Name}");
-
-                for (var pieceIndex = pieceStart;
-                     pieceIndex <= pieceEnd;
-                     pieceIndex++)
-                {
-                    if (pieceIndex > previousPieceIndex)
-                    {
-                        var pieceStatus = GetStatus(
-                            _pieceHashes.ElementAt((int)previousPieceIndex),
-                            pieceData.CalculateSha1Hash(
-                                    0,
-                                    pieceOffset)
-                                .ToHexaDecimalString());
-
-                        bitField[previousPieceIndex] = pieceStatus;
-
-                        previousPieceIndex = pieceIndex;
-                        pieceOffset = 0;
-                    }
-
-                    fileOffset = (pieceIndex - pieceStart) * _pieceLength;
-                    fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % _pieceLength : 0;
-
-                    length = (int)Math.Min(_pieceLength - pieceOffset, file.Key.Length - fileOffset);
-
-                    Read(file.Value, fileOffset, length, pieceData, pieceOffset);
-
-                    pieceOffset += length;
-                }
-
-                torrentStartOffset = torrentEndOffset;
-            }
-
-            // last piece
-            bitField[previousPieceIndex] = GetStatus(
-                _pieceHashes.ElementAt((int)previousPieceIndex),
-                pieceData.CalculateSha1Hash(
-                        0,
-                        pieceOffset)
-                    .ToHexaDecimalString());
+            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.None));
         }
 
-        return bitField;
+        
+        var brokenPieces = new List<BrokenPiece>();
+        long previousPieceIndex = 0;
+        long torrentStartOffset = 0;
+        var pieceData = new byte[pieceLength];
+        var pieceOffset = 0;
+
+        foreach (var file in innerFiles)
+        {
+            var torrentEndOffset = torrentStartOffset + file.Key.Length;
+
+            var pieceStart = (torrentStartOffset - torrentStartOffset % pieceLength) / pieceLength;
+
+            var pieceEnd = (torrentEndOffset - torrentEndOffset % pieceLength) / pieceLength;
+            pieceEnd -= torrentEndOffset % pieceLength == 0
+                ? 1
+                : 0;
+
+            Debug.WriteLine($"verifying file {file.Value.Name}");
+
+            for (var pieceIndex = pieceStart;
+                 pieceIndex <= pieceEnd;
+                 pieceIndex++)
+            {
+                if (pieceIndex > previousPieceIndex)
+                {
+                    var hash = pieceHashes.ElementAt((int)previousPieceIndex);
+                    var pieceStatus = GetStatus(
+                        hash,
+                        pieceData.CalculateSha1Hash(
+                                0,
+                                pieceOffset)
+                            .ToHexaDecimalString());
+
+                    //if(pieceStatus == PieceStatus.Missing)
+                    {
+                        Console.WriteLine(previousPieceIndex);
+                        
+                        var pieceDataCopy = new byte[pieceOffset];
+                        pieceData.CopyTo(pieceDataCopy, 0);
+
+                        brokenPieces.Add(new BrokenPiece(pieceDataCopy, previousPieceIndex, hash));
+                    }
+
+                    previousPieceIndex = pieceIndex;
+                    pieceOffset = 0;
+                }
+
+                var fileOffset = (pieceIndex - pieceStart) * pieceLength;
+                fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % pieceLength : 0;
+
+                var length = (int)Math.Min(pieceLength - pieceOffset, file.Key.Length - fileOffset);
+
+                Read(file.Value, fileOffset, length, pieceData, pieceOffset);
+
+                pieceOffset += length;
+            }
+
+            torrentStartOffset = torrentEndOffset;
+        }
+
+        var hash2 = pieceHashes.ElementAt((int)previousPieceIndex);
+        var pieceStatus2 = GetStatus(
+            hash2,
+            pieceData.CalculateSha1Hash(
+                    0,
+                    pieceOffset)
+                .ToHexaDecimalString());
+
+        if(pieceStatus2 == PieceStatus.Missing)
+        {
+            Console.WriteLine(previousPieceIndex);
+            
+            var pieceDataCopy = new byte[pieceOffset];
+            pieceData.Take(pieceOffset).ToArray().CopyTo(pieceDataCopy, 0);
+
+            brokenPieces.Add(new BrokenPiece(pieceDataCopy, previousPieceIndex, hash2));
+        }
+
+        return brokenPieces;
     }
 
     /// <summary>
@@ -154,7 +119,7 @@ public sealed class PersistenceManager
     /// <param name="filePath">The file path.</param>
     /// <param name="fileLength">Length of the file in bytes.</param>
     /// <returns>True if file was created; false otherwise.</returns>
-    private bool CreateFile(string filePath, long fileLength)
+    private static bool CreateFile(string filePath, long fileLength)
     {
         if (!Directory.Exists(Path.GetDirectoryName(filePath)))
         {
@@ -187,7 +152,7 @@ public sealed class PersistenceManager
     /// <param name="pieceHash">The piece hash.</param>
     /// <param name="calculatedPieceHash">The calculated piece hash.</param>
     /// <returns>The piece status.</returns>
-    private PieceStatus GetStatus(string pieceHash, string calculatedPieceHash)
+    private static PieceStatus GetStatus(string pieceHash, string calculatedPieceHash)
     {
         for (var i = 0; i < pieceHash.Length; i++)
             if (pieceHash[i] != calculatedPieceHash[i])
@@ -205,7 +170,7 @@ public sealed class PersistenceManager
     /// <param name="buffer">The buffer.</param>
     /// <param name="bufferOffset">The buffer offset.</param>
     /// <exception cref="System.Exception">Incorrect file length.</exception>
-    private void Read(FileStream stream, long offset, int length, byte[] buffer, int bufferOffset)
+    private static void Read(FileStream stream, long offset, int length, byte[] buffer, int bufferOffset)
     {
         if (stream.Length >= offset + length)
         {
