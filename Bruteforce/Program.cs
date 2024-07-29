@@ -1,11 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics.Arm;
-using System.Security.Cryptography;
 
 using Bruteforce;
+using Bruteforce.TorrentWrapper;
+
+using TorrentClient;
 
 Console.WriteLine("Hello, World!");
 
@@ -14,30 +14,7 @@ var originalHash = Utility.StringToByteArray("234210f5c309c17584bec0e70d78f23b06
 
 var sw = Stopwatch.StartNew();
 
-
-
-originalBin[0] = (byte)(originalBin[0] ^ 0b0000_0001);
-
-for (int i = 1; i < originalBin.Length * sizeof(byte); i++)
-{
-    originalBin[(i - 1) >> 3] = (byte)(originalBin[(i - 1) >> 3] ^ 1 << ((i - 1) % sizeof(byte)));
-    originalBin[i >> 3] = (byte)(originalBin[i >> 3] ^ 1 << ((i) % sizeof(byte)));
-
-    var newHash = SHA1.HashData(originalBin);
-    bool areEqual = true;
-
-    for (var j = 0; j < originalHash.Length; j++)
-    {
-        areEqual &= originalHash[j] == newHash[j];
-    }
-
-
-    if (areEqual)
-    {
-        Console.WriteLine($"Stop at {i}");
-        break;
-    }
-}
+Console.WriteLine(BruteforceParallel.Bruteforce(originalBin, originalHash));
 
 sw.Stop();
 Console.WriteLine($"Elapsed: {sw.Elapsed} for {originalBin.Length} bytes");
@@ -45,3 +22,11 @@ foreach (var b in originalHash)
 {
     Console.Write($"{b} ");
 }
+
+TorrentInfo torrent;
+TorrentInfo.TryLoad(@"C:\Users\nikit\RiderProjects\Bruteforce\Data\orelli.torrent", out torrent);
+
+var torrentClient = new Bruteforce.TorrentWrapper.TorrentClient(@"E:\Torrents\fidel_windows_3.1.2");
+
+torrentClient.Verify(); // start torrent client
+torrentClient.Verify(torrent); // start torrent file

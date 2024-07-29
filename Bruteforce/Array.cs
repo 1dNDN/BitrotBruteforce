@@ -17,11 +17,11 @@ namespace Bruteforce
     [Serializable]
     public class Array : ICollection, ICloneable
     {
-        private int[] m_array; // Do not rename (binary serialization)
-        private int m_length; // Do not rename (binary serialization)
+        private int[] _mArray; // Do not rename (binary serialization)
+        private int _mLength; // Do not rename (binary serialization)
         private int _version; // Do not rename (binary serialization)
 
-        private const int _ShrinkThreshold = 256;
+        private const int ShrinkThreshold = 256;
 
         /*=========================================================================
         ** Allocates space to hold length bit values. All of the values in the bit
@@ -44,18 +44,18 @@ namespace Bruteforce
         {
             ArgumentOutOfRangeException.ThrowIfNegative(length);
 
-            m_array = new int[GetInt32ArrayLengthFromBitLength(length)];
-            m_length = length;
+            _mArray = new int[GetInt32ArrayLengthFromBitLength(length)];
+            _mLength = length;
 
             if (defaultValue)
             {
-                System.Array.Fill(m_array, -1);
+                System.Array.Fill(_mArray, -1);
 
                 // clear high bit values in the last int
                 Div32Rem(length, out int extraBits);
                 if (extraBits > 0)
                 {
-                    m_array[^1] = (1 << extraBits) - 1;
+                    _mArray[^1] = (1 << extraBits) - 1;
                 }
             }
 
@@ -82,15 +82,15 @@ namespace Bruteforce
                 throw new ArgumentException();
             }
 
-            m_array = new int[GetInt32ArrayLengthFromByteLength(bytes.Length)];
-            m_length = bytes.Length * BitsPerByte;
+            _mArray = new int[GetInt32ArrayLengthFromByteLength(bytes.Length)];
+            _mLength = bytes.Length * BitsPerByte;
 
             uint totalCount = (uint)bytes.Length / 4;
 
             ReadOnlySpan<byte> byteSpan = bytes;
             for (int i = 0; i < totalCount; i++)
             {
-                m_array[i] = BinaryPrimitives.ReadInt32LittleEndian(byteSpan);
+                _mArray[i] = BinaryPrimitives.ReadInt32LittleEndian(byteSpan);
                 byteSpan = byteSpan.Slice(4);
             }
 
@@ -108,7 +108,7 @@ namespace Bruteforce
                     goto case 1;
                 // fall through
                 case 1:
-                    m_array[totalCount] = last | byteSpan[0];
+                    _mArray[totalCount] = last | byteSpan[0];
                     break;
             }
 
@@ -123,8 +123,8 @@ namespace Bruteforce
         {
             ArgumentNullException.ThrowIfNull(values);
 
-            m_array = new int[GetInt32ArrayLengthFromBitLength(values.Length)];
-            m_length = values.Length;
+            _mArray = new int[GetInt32ArrayLengthFromBitLength(values.Length)];
+            _mLength = values.Length;
 
             uint i = 0;
 
@@ -147,7 +147,7 @@ namespace Bruteforce
                     Vector256<byte> isFalse = Vector256.Equals(vector, Vector256<byte>.Zero);
 
                     uint result = isFalse.ExtractMostSignificantBits();
-                    m_array[i / 32u] = (int)(~result);
+                    _mArray[i / 32u] = (int)(~result);
                 }
             }
             else if (Vector128.IsHardwareAccelerated)
@@ -162,7 +162,7 @@ namespace Bruteforce
                     Vector128<byte> upperIsFalse = Vector128.Equals(upperVector, Vector128<byte>.Zero);
                     uint upperResult = upperIsFalse.ExtractMostSignificantBits();
 
-                    m_array[i / 32u] = (int)(~((upperResult << 16) | lowerResult));
+                    _mArray[i / 32u] = (int)(~((upperResult << 16) | lowerResult));
                 }
             }
 
@@ -172,7 +172,7 @@ namespace Bruteforce
                 if (values[i])
                 {
                     int elementIndex = Div32Rem((int)i, out int extraBits);
-                    m_array[elementIndex] |= 1 << extraBits;
+                    _mArray[elementIndex] |= 1 << extraBits;
                 }
             }
 
@@ -197,9 +197,9 @@ namespace Bruteforce
                 throw new ArgumentException();
             }
 
-            m_array = new int[values.Length];
-            System.Array.Copy(values, m_array, values.Length);
-            m_length = values.Length * BitsPerInt32;
+            _mArray = new int[values.Length];
+            System.Array.Copy(values, _mArray, values.Length);
+            _mLength = values.Length * BitsPerInt32;
 
             _version = 0;
         }
@@ -213,14 +213,14 @@ namespace Bruteforce
         {
             ArgumentNullException.ThrowIfNull(bits);
 
-            int arrayLength = GetInt32ArrayLengthFromBitLength(bits.m_length);
+            int arrayLength = GetInt32ArrayLengthFromBitLength(bits._mLength);
 
-            m_array = new int[arrayLength];
+            _mArray = new int[arrayLength];
 
-            Debug.Assert(bits.m_array.Length <= arrayLength);
+            Debug.Assert(bits._mArray.Length <= arrayLength);
 
-            System.Array.Copy(bits.m_array, m_array, arrayLength);
-            m_length = bits.m_length;
+            System.Array.Copy(bits._mArray, _mArray, arrayLength);
+            _mLength = bits._mLength;
 
             _version = bits._version;
         }
@@ -240,10 +240,10 @@ namespace Bruteforce
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Get(int index)
         {
-            if ((uint)index >= (uint)m_length)
+            if ((uint)index >= (uint)_mLength)
                 ThrowArgumentOutOfRangeException(index);
 
-            return (m_array[index >> 5] & (1 << index)) != 0;
+            return (_mArray[index >> 5] & (1 << index)) != 0;
         }
 
         /*=========================================================================
@@ -255,11 +255,11 @@ namespace Bruteforce
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(int index, bool value)
         {
-            if ((uint)index >= (uint)m_length)
+            if ((uint)index >= (uint)_mLength)
                 ThrowArgumentOutOfRangeException(index);
 
             int bitMask = 1 << index;
-            ref int segment = ref m_array[index >> 5];
+            ref int segment = ref _mArray[index >> 5];
 
             if (value)
             {
@@ -279,13 +279,13 @@ namespace Bruteforce
         public void SetAll(bool value)
         {
             int arrayLength = GetInt32ArrayLengthFromBitLength(Length);
-            Span<int> span = m_array.AsSpan(0, arrayLength);
+            Span<int> span = _mArray.AsSpan(0, arrayLength);
             if (value)
             {
                 span.Fill(-1);
 
                 // clear high bit values in the last int
-                Div32Rem(m_length, out int extraBits);
+                Div32Rem(_mLength, out int extraBits);
                 if (extraBits > 0)
                 {
                     span[^1] &= (1 << extraBits) - 1;
@@ -315,8 +315,8 @@ namespace Bruteforce
             // that the count we iterate to is within the bounds of both arrays.  We don't care about such code
             // corrupting the BitArray data in a way that produces incorrect answers, since BitArray is not meant
             // to be thread-safe; we only care about avoiding buffer overruns.
-            int[] thisArray = m_array;
-            int[] valueArray = value.m_array;
+            int[] thisArray = _mArray;
+            int[] valueArray = value._mArray;
 
             int count = GetInt32ArrayLengthFromBitLength(Length);
             if (Length != value.Length || (uint)count > (uint)thisArray.Length || (uint)count > (uint)valueArray.Length)
@@ -381,8 +381,8 @@ namespace Bruteforce
             // that the count we iterate to is within the bounds of both arrays.  We don't care about such code
             // corrupting the BitArray data in a way that produces incorrect answers, since BitArray is not meant
             // to be thread-safe; we only care about avoiding buffer overruns.
-            int[] thisArray = m_array;
-            int[] valueArray = value.m_array;
+            int[] thisArray = _mArray;
+            int[] valueArray = value._mArray;
 
             int count = GetInt32ArrayLengthFromBitLength(Length);
             if (Length != value.Length || (uint)count > (uint)thisArray.Length || (uint)count > (uint)valueArray.Length)
@@ -447,8 +447,8 @@ namespace Bruteforce
             // that the count we iterate to is within the bounds of both arrays.  We don't care about such code
             // corrupting the BitArray data in a way that produces incorrect answers, since BitArray is not meant
             // to be thread-safe; we only care about avoiding buffer overruns.
-            int[] thisArray = m_array;
-            int[] valueArray = value.m_array;
+            int[] thisArray = _mArray;
+            int[] valueArray = value._mArray;
 
             int count = GetInt32ArrayLengthFromBitLength(Length);
             if (Length != value.Length || (uint)count > (uint)thisArray.Length || (uint)count > (uint)valueArray.Length)
@@ -509,7 +509,7 @@ namespace Bruteforce
             // we snapshot the array then operate only on this snapshot.  We don't care about such code
             // corrupting the BitArray data in a way that produces incorrect answers, since BitArray is not meant
             // to be thread-safe; we only care about avoiding buffer overruns.
-            int[] thisArray = m_array;
+            int[] thisArray = _mArray;
 
             int count = GetInt32ArrayLengthFromBitLength(Length);
 
@@ -572,12 +572,12 @@ namespace Bruteforce
             }
 
             int toIndex = 0;
-            int ints = GetInt32ArrayLengthFromBitLength(m_length);
-            if (count < m_length)
+            int ints = GetInt32ArrayLengthFromBitLength(_mLength);
+            if (count < _mLength)
             {
                 // We can not use Math.DivRem without taking a dependency on System.Runtime.Extensions
                 int fromIndex = Div32Rem(count, out int shiftCount);
-                Div32Rem(m_length, out int extraBits);
+                Div32Rem(_mLength, out int extraBits);
                 if (shiftCount == 0)
                 {
                     unchecked
@@ -591,9 +591,9 @@ namespace Bruteforce
                         // However, the compiler protects us from undefined behaviour by constraining the
                         // right operand to between 0 and width - 1 (inclusive), i.e. right_operand = (right_operand % width).
                         uint mask = uint.MaxValue >> (BitsPerInt32 - extraBits);
-                        m_array[ints - 1] &= (int)mask;
+                        _mArray[ints - 1] &= (int)mask;
                     }
-                    System.Array.Copy(m_array, fromIndex, m_array, 0, ints - fromIndex);
+                    System.Array.Copy(_mArray, fromIndex, _mArray, 0, ints - fromIndex);
                     toIndex = ints - fromIndex;
                 }
                 else
@@ -603,18 +603,18 @@ namespace Bruteforce
                     {
                         while (fromIndex < lastIndex)
                         {
-                            uint right = (uint)m_array[fromIndex] >> shiftCount;
-                            int left = m_array[++fromIndex] << (BitsPerInt32 - shiftCount);
-                            m_array[toIndex++] = left | (int)right;
+                            uint right = (uint)_mArray[fromIndex] >> shiftCount;
+                            int left = _mArray[++fromIndex] << (BitsPerInt32 - shiftCount);
+                            _mArray[toIndex++] = left | (int)right;
                         }
                         uint mask = uint.MaxValue >> (BitsPerInt32 - extraBits);
-                        mask &= (uint)m_array[fromIndex];
-                        m_array[toIndex++] = (int)(mask >> shiftCount);
+                        mask &= (uint)_mArray[fromIndex];
+                        _mArray[toIndex++] = (int)(mask >> shiftCount);
                     }
                 }
             }
 
-            m_array.AsSpan(toIndex, ints - toIndex).Clear();
+            _mArray.AsSpan(toIndex, ints - toIndex).Clear();
             _version++;
             return this;
         }
@@ -636,16 +636,16 @@ namespace Bruteforce
             }
 
             int lengthToClear;
-            if (count < m_length)
+            if (count < _mLength)
             {
-                int lastIndex = (m_length - 1) >> BitShiftPerInt32;  // Divide by 32.
+                int lastIndex = (_mLength - 1) >> BitShiftPerInt32;  // Divide by 32.
 
                 // We can not use Math.DivRem without taking a dependency on System.Runtime.Extensions
                 lengthToClear = Div32Rem(count, out int shiftCount);
 
                 if (shiftCount == 0)
                 {
-                    System.Array.Copy(m_array, 0, m_array, lengthToClear, lastIndex + 1 - lengthToClear);
+                    System.Array.Copy(_mArray, 0, _mArray, lengthToClear, lastIndex + 1 - lengthToClear);
                 }
                 else
                 {
@@ -654,21 +654,21 @@ namespace Bruteforce
                     {
                         while (fromindex > 0)
                         {
-                            int left = m_array[fromindex] << shiftCount;
-                            uint right = (uint)m_array[--fromindex] >> (BitsPerInt32 - shiftCount);
-                            m_array[lastIndex] = left | (int)right;
+                            int left = _mArray[fromindex] << shiftCount;
+                            uint right = (uint)_mArray[--fromindex] >> (BitsPerInt32 - shiftCount);
+                            _mArray[lastIndex] = left | (int)right;
                             lastIndex--;
                         }
-                        m_array[lastIndex] = m_array[fromindex] << shiftCount;
+                        _mArray[lastIndex] = _mArray[fromindex] << shiftCount;
                     }
                 }
             }
             else
             {
-                lengthToClear = GetInt32ArrayLengthFromBitLength(m_length); // Clear all
+                lengthToClear = GetInt32ArrayLengthFromBitLength(_mLength); // Clear all
             }
 
-            m_array.AsSpan(0, lengthToClear).Clear();
+            _mArray.AsSpan(0, lengthToClear).Clear();
             _version++;
             return this;
         }
@@ -677,34 +677,34 @@ namespace Bruteforce
         {
             get
             {
-                return m_length;
+                return _mLength;
             }
             set
             {
                 ArgumentOutOfRangeException.ThrowIfNegative(value);
 
                 int newints = GetInt32ArrayLengthFromBitLength(value);
-                if (newints > m_array.Length || newints + _ShrinkThreshold < m_array.Length)
+                if (newints > _mArray.Length || newints + ShrinkThreshold < _mArray.Length)
                 {
                     // grow or shrink (if wasting more than _ShrinkThreshold ints)
-                    System.Array.Resize(ref m_array, newints);
+                    System.Array.Resize(ref _mArray, newints);
                 }
 
-                if (value > m_length)
+                if (value > _mLength)
                 {
                     // clear high bit values in the last int
-                    int last = (m_length - 1) >> BitShiftPerInt32;
-                    Div32Rem(m_length, out int bits);
+                    int last = (_mLength - 1) >> BitShiftPerInt32;
+                    Div32Rem(_mLength, out int bits);
                     if (bits > 0)
                     {
-                        m_array[last] &= (1 << bits) - 1;
+                        _mArray[last] &= (1 << bits) - 1;
                     }
 
                     // clear remaining int values
-                    m_array.AsSpan(last + 1, newints - last - 1).Clear();
+                    _mArray.AsSpan(last + 1, newints - last - 1).Clear();
                 }
 
-                m_length = value;
+                _mLength = value;
                 _version++;
             }
         }
@@ -720,33 +720,33 @@ namespace Bruteforce
 
             if (array is int[] intArray)
             {
-                Div32Rem(m_length, out int extraBits);
+                Div32Rem(_mLength, out int extraBits);
 
                 if (extraBits == 0)
                 {
                     // we have perfect bit alignment, no need to sanitize, just copy
-                    System.Array.Copy(m_array, 0, intArray, index, m_array.Length);
+                    System.Array.Copy(_mArray, 0, intArray, index, _mArray.Length);
                 }
                 else
                 {
-                    int last = (m_length - 1) >> BitShiftPerInt32;
+                    int last = (_mLength - 1) >> BitShiftPerInt32;
                     // do not copy the last int, as it is not completely used
-                    System.Array.Copy(m_array, 0, intArray, index, last);
+                    System.Array.Copy(_mArray, 0, intArray, index, last);
 
                     // the last int needs to be masked
-                    intArray[index + last] = m_array[last] & unchecked((1 << extraBits) - 1);
+                    intArray[index + last] = _mArray[last] & unchecked((1 << extraBits) - 1);
                 }
             }
             else if (array is byte[] byteArray)
             {
-                int arrayLength = GetByteArrayLengthFromBitLength(m_length);
+                int arrayLength = GetByteArrayLengthFromBitLength(_mLength);
                 if ((array.Length - index) < arrayLength)
                 {
                     throw new ArgumentException();
                 }
 
                 // equivalent to m_length % BitsPerByte, since BitsPerByte is a power of 2
-                uint extraBits = (uint)m_length & (BitsPerByte - 1);
+                uint extraBits = (uint)_mLength & (BitsPerByte - 1);
                 if (extraBits > 0)
                 {
                     // last byte is not aligned, we will directly copy one less byte
@@ -758,62 +758,62 @@ namespace Bruteforce
                 int quotient = Div4Rem(arrayLength, out int remainder);
                 for (int i = 0; i < quotient; i++)
                 {
-                    BinaryPrimitives.WriteInt32LittleEndian(span, m_array[i]);
+                    BinaryPrimitives.WriteInt32LittleEndian(span, _mArray[i]);
                     span = span.Slice(4);
                 }
 
                 if (extraBits > 0)
                 {
                     Debug.Assert(span.Length > 0);
-                    Debug.Assert(m_array.Length > quotient);
+                    Debug.Assert(_mArray.Length > quotient);
                     // mask the final byte
-                    span[remainder] = (byte)((m_array[quotient] >> (remainder * 8)) & ((1 << (int)extraBits) - 1));
+                    span[remainder] = (byte)((_mArray[quotient] >> (remainder * 8)) & ((1 << (int)extraBits) - 1));
                 }
 
                 switch (remainder)
                 {
                     case 3:
-                        span[2] = (byte)(m_array[quotient] >> 16);
+                        span[2] = (byte)(_mArray[quotient] >> 16);
                         goto case 2;
                     // fall through
                     case 2:
-                        span[1] = (byte)(m_array[quotient] >> 8);
+                        span[1] = (byte)(_mArray[quotient] >> 8);
                         goto case 1;
                     // fall through
                     case 1:
-                        span[0] = (byte)m_array[quotient];
+                        span[0] = (byte)_mArray[quotient];
                         break;
                 }
             }
             else if (array is bool[] boolArray)
             {
-                if (array.Length - index < m_length)
+                if (array.Length - index < _mLength)
                 {
                     throw new ArgumentException();
                 }
 
                 uint i = 0;
 
-                if (m_length < BitsPerInt32)
+                if (_mLength < BitsPerInt32)
                     goto LessThan32;
 
                 // The mask used when shuffling a single int into Vector128/256.
                 // On little endian machines, the lower 8 bits of int belong in the first byte, next lower 8 in the second and so on.
                 // We place the bytes that contain the bits to its respective byte so that we can mask out only the relevant bits later.
-                Vector128<byte> lowerShuffleMask_CopyToBoolArray = Vector128.Create(0, 0x01010101_01010101).AsByte();
-                Vector128<byte> upperShuffleMask_CopyToBoolArray = Vector128.Create(0x02020202_02020202, 0x03030303_03030303).AsByte();
+                Vector128<byte> lowerShuffleMaskCopyToBoolArray = Vector128.Create(0, 0x01010101_01010101).AsByte();
+                Vector128<byte> upperShuffleMaskCopyToBoolArray = Vector128.Create(0x02020202_02020202, 0x03030303_03030303).AsByte();
 
                 if (Avx2.IsSupported)
                 {
-                    Vector256<byte> shuffleMask = Vector256.Create(lowerShuffleMask_CopyToBoolArray, upperShuffleMask_CopyToBoolArray);
+                    Vector256<byte> shuffleMask = Vector256.Create(lowerShuffleMaskCopyToBoolArray, upperShuffleMaskCopyToBoolArray);
                     Vector256<byte> bitMask = Vector256.Create(0x80402010_08040201).AsByte();
                     Vector256<byte> ones = Vector256.Create((byte)1);
 
                     fixed (bool* destination = &boolArray[index])
                     {
-                        for (; (i + Vector256ByteCount) <= (uint)m_length; i += Vector256ByteCount)
+                        for (; (i + Vector256ByteCount) <= (uint)_mLength; i += Vector256ByteCount)
                         {
-                            int bits = m_array[i / (uint)BitsPerInt32];
+                            int bits = _mArray[i / (uint)BitsPerInt32];
                             Vector256<int> scalar = Vector256.Create(bits);
                             Vector256<byte> shuffled = Avx2.Shuffle(scalar.AsByte(), shuffleMask);
                             Vector256<byte> extracted = Avx2.And(shuffled, bitMask);
@@ -827,8 +827,8 @@ namespace Bruteforce
                 }
                 else if (Ssse3.IsSupported)
                 {
-                    Vector128<byte> lowerShuffleMask = lowerShuffleMask_CopyToBoolArray;
-                    Vector128<byte> upperShuffleMask = upperShuffleMask_CopyToBoolArray;
+                    Vector128<byte> lowerShuffleMask = lowerShuffleMaskCopyToBoolArray;
+                    Vector128<byte> upperShuffleMask = upperShuffleMaskCopyToBoolArray;
                     Vector128<byte> ones = Vector128.Create((byte)1);
                     Vector128<byte> bitMask128 = BitConverter.IsLittleEndian ?
                                                  Vector128.Create(0x80402010_08040201).AsByte() :
@@ -836,9 +836,9 @@ namespace Bruteforce
 
                     fixed (bool* destination = &boolArray[index])
                     {
-                        for (; (i + Vector128ByteCount * 2u) <= (uint)m_length; i += Vector128ByteCount * 2u)
+                        for (; (i + Vector128ByteCount * 2u) <= (uint)_mLength; i += Vector128ByteCount * 2u)
                         {
-                            int bits = m_array[i / (uint)BitsPerInt32];
+                            int bits = _mArray[i / (uint)BitsPerInt32];
                             Vector128<int> scalar = Vector128.CreateScalarUnsafe(bits);
 
                             Vector128<byte> shuffledLower = Ssse3.Shuffle(scalar.AsByte(), lowerShuffleMask);
@@ -862,9 +862,9 @@ namespace Bruteforce
 
                     fixed (bool* destination = &boolArray[index])
                     {
-                        for (; (i + Vector128ByteCount * 2u) <= (uint)m_length; i += Vector128ByteCount * 2u)
+                        for (; (i + Vector128ByteCount * 2u) <= (uint)_mLength; i += Vector128ByteCount * 2u)
                         {
-                            int bits = m_array[i / (uint)BitsPerInt32];
+                            int bits = _mArray[i / (uint)BitsPerInt32];
                             // Same logic as SSSE3 path, except we do not have Shuffle instruction.
                             // (TableVectorLookup could be an alternative - dotnet/runtime#1277)
                             // Instead we use chained ZIP1/2 instructions:
@@ -898,10 +898,10 @@ namespace Bruteforce
                 }
 
             LessThan32:
-                for (; i < (uint)m_length; i++)
+                for (; i < (uint)_mLength; i++)
                 {
                     int elementIndex = Div32Rem((int)i, out int extraBits);
-                    boolArray[(uint)index + i] = ((m_array[elementIndex] >> extraBits) & 0x00000001) != 0;
+                    boolArray[(uint)index + i] = ((_mArray[elementIndex] >> extraBits) & 0x00000001) != 0;
                 }
             }
             else
@@ -916,15 +916,15 @@ namespace Bruteforce
         /// <returns><c>true</c> if every bit in the <see cref="Array"/> is set to <c>true</c>, or if <see cref="Array"/> is empty; otherwise, <c>false</c>.</returns>
         public bool HasAllSet()
         {
-            Div32Rem(m_length, out int extraBits);
-            int intCount = GetInt32ArrayLengthFromBitLength(m_length);
+            Div32Rem(_mLength, out int extraBits);
+            int intCount = GetInt32ArrayLengthFromBitLength(_mLength);
             if (extraBits != 0)
             {
                 intCount--;
             }
 
-            const int AllSetBits = -1; // 0xFF_FF_FF_FF
-            if (m_array.AsSpan(0, intCount).ContainsAnyExcept(AllSetBits))
+            const int allSetBits = -1; // 0xFF_FF_FF_FF
+            if (_mArray.AsSpan(0, intCount).ContainsAnyExcept(allSetBits))
             {
                 return false;
             }
@@ -934,11 +934,11 @@ namespace Bruteforce
                 return true;
             }
 
-            Debug.Assert(GetInt32ArrayLengthFromBitLength(m_length) > 0);
-            Debug.Assert(intCount == GetInt32ArrayLengthFromBitLength(m_length) - 1);
+            Debug.Assert(GetInt32ArrayLengthFromBitLength(_mLength) > 0);
+            Debug.Assert(intCount == GetInt32ArrayLengthFromBitLength(_mLength) - 1);
 
             int mask = (1 << extraBits) - 1;
-            return (m_array[intCount] & mask) == mask;
+            return (_mArray[intCount] & mask) == mask;
         }
 
         /// <summary>
@@ -947,14 +947,14 @@ namespace Bruteforce
         /// <returns><c>true</c> if <see cref="Array"/> is not empty and at least one of its bit is set to <c>true</c>; otherwise, <c>false</c>.</returns>
         public bool HasAnySet()
         {
-            Div32Rem(m_length, out int extraBits);
-            int intCount = GetInt32ArrayLengthFromBitLength(m_length);
+            Div32Rem(_mLength, out int extraBits);
+            int intCount = GetInt32ArrayLengthFromBitLength(_mLength);
             if (extraBits != 0)
             {
                 intCount--;
             }
 
-            if (m_array.AsSpan(0, intCount).ContainsAnyExcept(0))
+            if (_mArray.AsSpan(0, intCount).ContainsAnyExcept(0))
             {
                 return true;
             }
@@ -964,13 +964,13 @@ namespace Bruteforce
                 return false;
             }
 
-            Debug.Assert(GetInt32ArrayLengthFromBitLength(m_length) > 0);
-            Debug.Assert(intCount == GetInt32ArrayLengthFromBitLength(m_length) - 1);
+            Debug.Assert(GetInt32ArrayLengthFromBitLength(_mLength) > 0);
+            Debug.Assert(intCount == GetInt32ArrayLengthFromBitLength(_mLength) - 1);
 
-            return (m_array[intCount] & (1 << extraBits) - 1) != 0;
+            return (_mArray[intCount] & (1 << extraBits) - 1) != 0;
         }
 
-        public int Count => m_length;
+        public int Count => _mLength;
 
         public object SyncRoot => this;
 
@@ -1070,7 +1070,7 @@ namespace Bruteforce
                     throw new InvalidOperationException();
                 }
 
-                if (_index < (_bitArray.m_length - 1))
+                if (_index < (_bitArray._mLength - 1))
                 {
                     _index++;
                     _currentElement = _bitArray.Get(_index);
@@ -1078,7 +1078,7 @@ namespace Bruteforce
                 }
                 else
                 {
-                    _index = _bitArray.m_length;
+                    _index = _bitArray._mLength;
                 }
 
                 return false;
@@ -1088,7 +1088,7 @@ namespace Bruteforce
             {
                 get
                 {
-                    if ((uint)_index >= (uint)_bitArray.m_length)
+                    if ((uint)_index >= (uint)_bitArray._mLength)
                     {
                         throw GetInvalidOperationException(_index);
                     }
@@ -1115,7 +1115,7 @@ namespace Bruteforce
                 }
                 else
                 {
-                    Debug.Assert(index >= _bitArray.m_length);
+                    Debug.Assert(index >= _bitArray._mLength);
                     return new InvalidOperationException();
                 }
             }
