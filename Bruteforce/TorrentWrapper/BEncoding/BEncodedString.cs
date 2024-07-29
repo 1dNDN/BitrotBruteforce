@@ -26,7 +26,7 @@ public class BEncodedString : BEncodedValue, IComparable<BEncodedString>
     /// </summary>
     /// <param name="value">The value.</param>
     public BEncodedString(char[] value)
-        : this(Encoding.ASCII.GetBytes(value))
+        : this(Encoding.UTF8.GetBytes(value))
     {
     }
 
@@ -35,7 +35,7 @@ public class BEncodedString : BEncodedValue, IComparable<BEncodedString>
     /// </summary>
     /// <param name="value">The value.</param>
     public BEncodedString(string value)
-        : this(Encoding.ASCII.GetBytes(value))
+        : this(Encoding.UTF8.GetBytes(value))
     {
     }
 
@@ -64,9 +64,9 @@ public class BEncodedString : BEncodedValue, IComparable<BEncodedString>
     /// </value>
     public string Text
     {
-        get => Encoding.ASCII.GetString(_textBytes);
+        get => Encoding.UTF8.GetString(_textBytes);
 
-        set => _textBytes = Encoding.ASCII.GetBytes(value);
+        set => _textBytes = Encoding.UTF8.GetBytes(value);
     }
 
     /// <summary>
@@ -271,7 +271,7 @@ public class BEncodedString : BEncodedValue, IComparable<BEncodedString>
     ///     A <see cref="string" /> that represents this instance.
     /// </returns>
     public override string ToString() =>
-        Encoding.ASCII.GetString(_textBytes);
+        Encoding.UTF8.GetString(_textBytes);
 
     /// <summary>
     ///     Writes the specified destination.
