@@ -24,49 +24,86 @@ if(args.Length == 3)
     doRepair = args[3] == "y";
 }
 
-
-DoWork(pathToTorrent, pathToDir, doRepair);
-
-void DoWork(string pathToTorrent, string pathToDir, bool doRepair)
+if (args.Length == 4)
 {
-    TorrentInfo.TryLoad(pathToTorrent, out var torrent);
-
-    if(torrent.Files.Length == 1 && torrent.Files[0].FilePath.Contains("Posobie_dlja_samoubijz"))
-        Console.WriteLine("Нихуя себе, сегодня хуярим петуха!");
-    else 
-        Console.WriteLine("Опять хуйню прислали");
+    var pieceIndex = Convert.ToInt32(args[3]);
+    var bitIndex = Convert.ToInt32(args[4]);
     
-    var pieces = PersistenceManager.Verify(pathToDir, torrent);
+    Worker.DoWork(pathToTorrent, pathToDir, pieceIndex, bitIndex);
+}
+else
+{
+    Worker.DoWork(pathToTorrent, pathToDir, doRepair);
+}
 
-    Console.WriteLine($"Похуевило {pieces.Count} частям");
 
-    foreach (var piece in pieces)
+
+class Worker
+{
+    public static void DoWork(string pathToTorrent, string pathToDir, bool doRepair)
     {
-        foreach (var b in piece.Hash.ToByteArrayFromHex())
+        TorrentInfo.TryLoad(pathToTorrent, out var torrent);
+
+        if (torrent.Files.Length == 1 && torrent.Files[0].FilePath.Contains("Posobie_dlja_samoubijz"))
+            Console.WriteLine("Нихуя себе, сегодня хуярим петуха!");
+        else
+            Console.WriteLine("Опять хуйню прислали");
+
+        var pieces = PersistenceManager.Verify(pathToDir, torrent);
+
+        Console.WriteLine($"Похуевило {pieces.Count} частям");
+
+        foreach (var piece in pieces)
         {
-            Console.Write($"{b} ");
+            foreach (var b in piece.Hash.ToByteArrayFromHex())
+            {
+                Console.Write($"{b} ");
+            }
+
+            Console.WriteLine();
+
+            Console.WriteLine($"Хуярим часть номер {piece.Index}");
+
+            if (!piece.Restoreable)
+            {
+                Console.WriteLine("Тут одни нули, хуйня выходит");
+                continue;
+            }
+
+            var sw = Stopwatch.StartNew();
+
+            var bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
+            Console.WriteLine(bitIndex);
+
+            if (doRepair && bitIndex > 0)
+            {
+                PersistenceManager.FlipBit(pathToDir, torrent, piece.Index, bitIndex);
+            }
+
+            sw.Stop();
+            Console.WriteLine($"Прохуярило: {sw.Elapsed} времени на {piece.Bytes.Length} байт хуйни");
         }
-        Console.WriteLine();
-    
-        Console.WriteLine($"Хуярим часть номер {piece.Index}");
-    
-        if(!piece.Restoreable)
+    }
+
+    public static void DoWork(string pathToTorrent, string pathToDir, int pieceIndex, int bitIndex)
+    {
+        TorrentInfo.TryLoad(pathToTorrent, out var torrent);
+
+        if (torrent.Files.Length == 1 && torrent.Files[0].FilePath.Contains("Posobie_dlja_samoubijz"))
+            Console.WriteLine("Нихуя себе, сегодня хуярим петуха!");
+        else
+            Console.WriteLine("Опять хуйню прислали");
+
+        var pieces = PersistenceManager.Verify(pathToDir, torrent);
+
+        Console.WriteLine($"Похуевило {pieces.Count} частям");
+
+        foreach (var piece in pieces)
         {
-            Console.WriteLine("Тут одни нули, хуйня выходит");
-            continue;
-        }
+            Console.WriteLine($"Хуярим часть номер {piece.Index}");
 
-        var sw = Stopwatch.StartNew();
-
-        var bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
-        Console.WriteLine(bitIndex);
-
-        if (doRepair && bitIndex > 0)
-        {
             PersistenceManager.FlipBit(pathToDir, torrent, piece.Index, bitIndex);
+            Console.WriteLine("Нахуярили");
         }
-        
-        sw.Stop();
-        Console.WriteLine($"Прохуярило: {sw.Elapsed} времени на {piece.Bytes.Length} байт хуйни");
     }
 }
