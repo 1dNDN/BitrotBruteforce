@@ -25,4 +25,74 @@
       <ProjectReference Include="..\Bruteforce\Bruteforce.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="TestData\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part01.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part02.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part03.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part04.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part05.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part06.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part07.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part08.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part09.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Undamaged\Petukh\Posobie_dlja_samoubijz.part10.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part01.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part02.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part03.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part04.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part05.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part06.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part07.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part08.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part09.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Damaged\Petukh\Posobie_dlja_samoubijz.part10.rar">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\Petukh.torrent">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

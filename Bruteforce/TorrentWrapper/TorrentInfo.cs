@@ -310,8 +310,7 @@ public sealed class TorrentInfo
                 general[announceKey] is BEncodedString &&
                 Uri.TryCreate(general[announceKey].As<BEncodedString>().Text, UriKind.Absolute, out tmpUri))
                 announceList.Add(tmpUri);
-            else
-                return false;
+
 
             // announce list
             if (general.ContainsKey(announceListKey) &&
