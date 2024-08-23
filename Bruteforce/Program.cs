@@ -8,9 +8,26 @@ using Bruteforce.TorrentWrapper.Extensions;
 
 
 // DoWork(@"C:\Users\nikit\RiderProjects\Bruteforce\orelli2.torrent", @"C:\Users\nikit\RiderProjects\Bruteforce");
-DoWork(Environment.GetCommandLineArgs()[1], Environment.GetCommandLineArgs()[2]);
 
-void DoWork(string pathToTorrent, string pathToDir)
+// var args = Environment.GetCommandLineArgs();
+
+if (args.Length < 2)
+    Console.WriteLine("Ты сначала спиздани, че надо, а потом суету наводи");
+
+var pathToTorrent = args[1];
+var pathToDir = args[2];
+
+var doRepair = false;
+
+if(args.Length == 3)
+{
+    doRepair = args[3] == "y";
+}
+
+
+DoWork(pathToTorrent, pathToDir, doRepair);
+
+void DoWork(string pathToTorrent, string pathToDir, bool doRepair)
 {
     TorrentInfo.TryLoad(pathToTorrent, out var torrent);
 
@@ -41,8 +58,14 @@ void DoWork(string pathToTorrent, string pathToDir)
 
         var sw = Stopwatch.StartNew();
 
-        Console.WriteLine(BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex()));
+        var bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
+        Console.WriteLine(bitIndex);
 
+        if (doRepair && bitIndex > 0)
+        {
+            PersistenceManager.FlipBit(pathToDir, torrent, piece.Index, bitIndex);
+        }
+        
         sw.Stop();
         Console.WriteLine($"Прохуярило: {sw.Elapsed} времени на {piece.Bytes.Length} байт хуйни");
     }
