@@ -11,6 +11,24 @@ public static class PersistenceManager
 {
     public static List<BrokenPiece> Verify(string directoryPath, TorrentInfo torrentInfo) =>
         Verify(directoryPath, torrentInfo.Files, torrentInfo.PieceLength, torrentInfo.PieceHashes);
+    
+    public static void FlipBit(string directoryPath, TorrentInfo torrentInfo, long pieceIndex, int bitIndex) =>
+        FlipBit(directoryPath, torrentInfo.Files, torrentInfo.PieceLength, pieceIndex, bitIndex);
+
+    /// <summary>
+    ///     Verifies the specified file if it corresponds with the piece hashes.
+    /// </summary>
+    /// <returns>
+    ///     Целое нихуя
+    /// </returns>
+    public static void FlipBit(string directoryPath, TorrentFileInfo[] files, long pieceLength, long pieceIndex, int bitIndex)
+    {
+        var pieceData = Get(directoryPath, files, pieceLength, pieceIndex);
+        
+        pieceData[bitIndex >> 3] = (byte)(pieceData[bitIndex >> 3] ^ 1 << ((bitIndex) % 8));
+        
+        Put(directoryPath, files, pieceLength, pieceIndex, pieceData);
+    }
 
     /// <summary>
     ///     Verifies the specified file if it corresponds with the piece hashes.
@@ -26,7 +44,7 @@ public static class PersistenceManager
         {
             CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
 
-            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.None));
+            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
         }
 
 
@@ -158,7 +176,7 @@ public static class PersistenceManager
         {
             CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
 
-            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.None));
+            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
         }
 
         if (length == pieceData.Length)
@@ -213,7 +231,7 @@ public static class PersistenceManager
     /// <returns>
     ///     The piece data.
     /// </returns>
-    public static byte[] Get(string directoryPath, TorrentFileInfo[] files, long pieceLength, int pieceIndex)
+    public static byte[] Get(string directoryPath, TorrentFileInfo[] files, long pieceLength, long pieceIndex)
     {
         long pieceStart;
         long pieceEnd;
@@ -230,7 +248,7 @@ public static class PersistenceManager
         {
             CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
 
-            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.None));
+            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
         }
         
         // calculate length of the data read (it could be less than the specified piece length)
@@ -305,21 +323,6 @@ public static class PersistenceManager
     }
 
     /// <summary>
-    ///     Verifies the specified file if it corresponds with the piece hashes.
-    /// </summary>
-    /// <returns>
-    ///     Целое нихуя
-    /// </returns>
-    public static void FlipBit(string directoryPath, TorrentFileInfo[] files, long pieceLength, int pieceIndex, int bitIndex)
-    {
-        var pieceData = Get(directoryPath, files, pieceLength, pieceIndex);
-        
-        pieceData[bitIndex >> 3] = (byte)(pieceData[bitIndex >> 3] ^ 1 << ((bitIndex) % 8));
-        
-        Put(directoryPath, files, pieceLength, pieceIndex, pieceData);
-    }
-
-    /// <summary>
     ///     Creates the file.
     /// </summary>
     /// <param name="filePath">The file path.</param>
@@ -338,7 +341,7 @@ public static class PersistenceManager
         {
             Debug.WriteLine($"creating file {filePath}");
 
-            using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
             {
                 stream.SetLength(fileLength);
                 stream.Close();

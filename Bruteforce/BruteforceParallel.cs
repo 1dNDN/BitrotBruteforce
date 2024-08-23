@@ -79,6 +79,7 @@ public class BruteforceParallel
                     return;
             
             data[(i - 1) >> 3] = (byte)(data[(i - 1) >> 3] ^ (1 << ((i - 1) % 8)));
+            data[i >> 3] = (byte)(data[i >> 3] ^ (1 << (i % 8)));
             
             var newHash = GetHash(data);
 
