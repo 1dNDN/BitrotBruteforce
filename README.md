@@ -7,9 +7,9 @@
 Найти координаты битфлипа в раздаче:  
 ```C:\Users\nikit\RiderProjects\Bruteforce\orelli2.torrent C:\Users\nikit\RiderProjects\Bruteforce```  
 
-Найти и исправить битфлипы в раздаче=:  
-```C:\Users\nikit\RiderProjects\Bruteforce\orelli2.torrent C:\Users\nikit\RiderProjects\Bruteforce y```
+Найти и исправить битфлипы в раздаче=:   
+```C:\Users\nikit\RiderProjects\Bruteforce\orelli2.torrent C:\Users\nikit\RiderProjects\Bruteforce y```  
 
-Исправить известный битфлип в раздаче:
+Исправить известный битфлип в раздаче:  
 ```C:\Users\nikit\RiderProjects\Bruteforce\orelli2.torrent C:\Users\nikit\RiderProjects\Bruteforce 235 6901```  
-Где первое число - номер части, а второе число - номер перевернутого бита в части
+Где первое число - номер части, а второе число - номер перевернутого бита в части  
