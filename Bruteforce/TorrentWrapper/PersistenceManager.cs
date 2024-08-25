@@ -11,7 +11,7 @@ public static class PersistenceManager
 {
     public static List<BrokenPiece> Verify(string directoryPath, TorrentInfo torrentInfo) =>
         Verify(directoryPath, torrentInfo.Files, torrentInfo.PieceLength, torrentInfo.PieceHashes);
-    
+
     public static void FlipBit(string directoryPath, TorrentInfo torrentInfo, long pieceIndex, int bitIndex) =>
         FlipBit(directoryPath, torrentInfo.Files, torrentInfo.PieceLength, pieceIndex, bitIndex);
 
@@ -24,9 +24,9 @@ public static class PersistenceManager
     public static void FlipBit(string directoryPath, TorrentFileInfo[] files, long pieceLength, long pieceIndex, int bitIndex)
     {
         var pieceData = Get(directoryPath, files, pieceLength, pieceIndex);
-        
-        pieceData[bitIndex >> 3] = (byte)(pieceData[bitIndex >> 3] ^ 1 << ((bitIndex) % 8));
-        
+
+        pieceData[bitIndex >> 3] = (byte)(pieceData[bitIndex >> 3] ^ (1 << (bitIndex % 8)));
+
         Put(directoryPath, files, pieceLength, pieceIndex, pieceData);
     }
 
@@ -40,93 +40,103 @@ public static class PersistenceManager
     {
         var innerFiles = new Dictionary<TorrentFileInfo, FileStream>();
 
-        foreach (var file in files)
+        try
         {
-            CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
-
-            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
-        }
-
-
-        var brokenPieces = new List<BrokenPiece>();
-        long previousPieceIndex = 0;
-        long torrentStartOffset = 0;
-        var pieceData = new byte[pieceLength];
-        var pieceOffset = 0;
-
-        foreach (var file in innerFiles)
-        {
-            var torrentEndOffset = torrentStartOffset + file.Key.Length;
-
-            var pieceStart = (torrentStartOffset - torrentStartOffset % pieceLength) / pieceLength;
-
-            var pieceEnd = (torrentEndOffset - torrentEndOffset % pieceLength) / pieceLength;
-            pieceEnd -= torrentEndOffset % pieceLength == 0
-                ? 1
-                : 0;
-
-            Debug.WriteLine($"verifying file {file.Value.Name}");
-
-            for (var pieceIndex = pieceStart; pieceIndex <= pieceEnd; pieceIndex++)
+            foreach (var file in files)
             {
-                if (pieceIndex > previousPieceIndex)
-                {
-                    var hash = pieceHashes.ElementAt((int)previousPieceIndex);
-                    var pieceStatus = GetStatus(
-                        hash,
-                        pieceData.CalculateSha1Hash(
-                                0,
-                                pieceOffset)
-                            .ToHexaDecimalString());
+                CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
 
-                    if (pieceStatus == PieceStatus.Missing)
-                    {
-                        Console.WriteLine(previousPieceIndex);
-
-                        var pieceDataCopy = new byte[pieceOffset];
-                        pieceData.CopyTo(pieceDataCopy, 0);
-
-                        brokenPieces.Add(new BrokenPiece(pieceDataCopy, previousPieceIndex, hash));
-                    }
-
-                    previousPieceIndex = pieceIndex;
-                    pieceOffset = 0;
-                }
-
-                var fileOffset = (pieceIndex - pieceStart) * pieceLength;
-                fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % pieceLength : 0;
-
-                var length = (int)Math.Min(pieceLength - pieceOffset, file.Key.Length - fileOffset);
-
-                Read(file.Value, fileOffset, length, pieceData, pieceOffset);
-
-                pieceOffset += length;
+                innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
             }
 
-            torrentStartOffset = torrentEndOffset;
+
+            var brokenPieces = new List<BrokenPiece>();
+            long previousPieceIndex = 0;
+            long torrentStartOffset = 0;
+            var pieceData = new byte[pieceLength];
+            var pieceOffset = 0;
+
+            foreach (var file in innerFiles)
+            {
+                var torrentEndOffset = torrentStartOffset + file.Key.Length;
+
+                var pieceStart = (torrentStartOffset - torrentStartOffset % pieceLength) / pieceLength;
+
+                var pieceEnd = (torrentEndOffset - torrentEndOffset % pieceLength) / pieceLength;
+                pieceEnd -= torrentEndOffset % pieceLength == 0
+                    ? 1
+                    : 0;
+
+                Debug.WriteLine($"verifying file {file.Value.Name}");
+
+                for (var pieceIndex = pieceStart; pieceIndex <= pieceEnd; pieceIndex++)
+                {
+                    if (pieceIndex > previousPieceIndex)
+                    {
+                        var hash = pieceHashes.ElementAt((int)previousPieceIndex);
+                        var pieceStatus = GetStatus(
+                            hash,
+                            pieceData.CalculateSha1Hash(
+                                    0,
+                                    pieceOffset)
+                                .ToHexaDecimalString());
+
+                        if (pieceStatus == PieceStatus.Missing)
+                        {
+                            Console.WriteLine(previousPieceIndex);
+
+                            var pieceDataCopy = new byte[pieceOffset];
+                            pieceData.CopyTo(pieceDataCopy, 0);
+
+                            brokenPieces.Add(new BrokenPiece(pieceDataCopy, previousPieceIndex, hash));
+                        }
+
+                        previousPieceIndex = pieceIndex;
+                        pieceOffset = 0;
+                    }
+
+                    var fileOffset = (pieceIndex - pieceStart) * pieceLength;
+                    fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % pieceLength : 0;
+
+                    var length = (int)Math.Min(pieceLength - pieceOffset, file.Key.Length - fileOffset);
+
+                    Read(file.Value, fileOffset, length, pieceData, pieceOffset);
+
+                    pieceOffset += length;
+                }
+
+                torrentStartOffset = torrentEndOffset;
+            }
+
+            var hash2 = pieceHashes.ElementAt((int)previousPieceIndex);
+            var pieceStatus2 = GetStatus(
+                hash2,
+                pieceData.CalculateSha1Hash(
+                        0,
+                        pieceOffset)
+                    .ToHexaDecimalString());
+
+            if (pieceStatus2 == PieceStatus.Missing)
+            {
+                Console.WriteLine(previousPieceIndex);
+
+                var pieceDataCopy = new byte[pieceOffset];
+                pieceData.Take(pieceOffset).ToArray().CopyTo(pieceDataCopy, 0);
+
+                brokenPieces.Add(new BrokenPiece(pieceDataCopy, previousPieceIndex, hash2));
+            }
+
+
+            return brokenPieces;
         }
-
-        var hash2 = pieceHashes.ElementAt((int)previousPieceIndex);
-        var pieceStatus2 = GetStatus(
-            hash2,
-            pieceData.CalculateSha1Hash(
-                    0,
-                    pieceOffset)
-                .ToHexaDecimalString());
-
-        if (pieceStatus2 == PieceStatus.Missing)
+        finally
         {
-            Console.WriteLine(previousPieceIndex);
-
-            var pieceDataCopy = new byte[pieceOffset];
-            pieceData.Take(pieceOffset).ToArray().CopyTo(pieceDataCopy, 0);
-
-            brokenPieces.Add(new BrokenPiece(pieceDataCopy, previousPieceIndex, hash2));
+            foreach (var innerFile in innerFiles)
+                innerFile.Value.Close();
         }
 
-        return brokenPieces;
     }
-    
+
     /// <summary>
     ///     Puts the data.
     /// </summary>
@@ -169,55 +179,64 @@ public static class PersistenceManager
 
             torrentStartOffset = torrentEndOffset;
         }
-        
+
         var innerFiles = new Dictionary<TorrentFileInfo, FileStream>();
-        
-        foreach (var file in files)
+
+        try
         {
-            CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
 
-            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
-        }
-
-        if (length == pieceData.Length)
-        {
-            torrentStartOffset = 0;
-            length = 0;
-
-            // write the piece
-            foreach (var file in innerFiles)
+            foreach (var file in files)
             {
-                torrentEndOffset = torrentStartOffset + file.Key.Length;
+                CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
 
-                pieceStart = (torrentStartOffset - torrentStartOffset % pieceLength) / pieceLength;
+                innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
+            }
 
-                pieceEnd = (torrentEndOffset - torrentEndOffset % pieceLength) / pieceLength;
-                pieceEnd -= torrentEndOffset % pieceLength == 0 ? 1 : 0;
+            if (length == pieceData.Length)
+            {
+                torrentStartOffset = 0;
+                length = 0;
 
-                if (pieceIndex >= pieceStart &&
-                    pieceIndex <= pieceEnd)
+                // write the piece
+                foreach (var file in innerFiles)
                 {
-                    fileOffset = (pieceIndex - pieceStart) * pieceLength;
-                    fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % pieceLength : 0;
+                    torrentEndOffset = torrentStartOffset + file.Key.Length;
 
-                    length = (int)Math.Min(pieceLength - pieceOffset, file.Key.Length - fileOffset);
+                    pieceStart = (torrentStartOffset - torrentStartOffset % pieceLength) / pieceLength;
 
-                    
-                    Write(file.Value, fileOffset, length, pieceData, pieceOffset);
+                    pieceEnd = (torrentEndOffset - torrentEndOffset % pieceLength) / pieceLength;
+                    pieceEnd -= torrentEndOffset % pieceLength == 0 ? 1 : 0;
 
-                    pieceOffset += length;
+                    if (pieceIndex >= pieceStart &&
+                        pieceIndex <= pieceEnd)
+                    {
+                        fileOffset = (pieceIndex - pieceStart) * pieceLength;
+                        fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % pieceLength : 0;
+
+                        length = (int)Math.Min(pieceLength - pieceOffset, file.Key.Length - fileOffset);
+
+
+                        Write(file.Value, fileOffset, length, pieceData, pieceOffset);
+
+                        pieceOffset += length;
+                    }
+                    else if (pieceIndex < pieceStart)
+                    {
+                        break;
+                    }
+
+                    torrentStartOffset = torrentEndOffset;
                 }
-                else if (pieceIndex < pieceStart)
-                {
-                    break;
-                }
-
-                torrentStartOffset = torrentEndOffset;
+            }
+            else
+            {
+                throw new ArgumentException("Длину распидорасило.");
             }
         }
-        else
+        finally
         {
-            throw new ArgumentException("Длину распидорасило.");
+            foreach (var innerFile in innerFiles)
+                innerFile.Value.Close();
         }
     }
 
@@ -243,47 +262,17 @@ public static class PersistenceManager
         var length = 0;
 
         var innerFiles = new Dictionary<TorrentFileInfo, FileStream>();
-        
-        foreach (var file in files)
+
+        try
         {
-            CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
-
-            innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
-        }
-        
-        // calculate length of the data read (it could be less than the specified piece length)
-        foreach (var file in innerFiles)
-        {
-            torrentEndOffset = torrentStartOffset + file.Key.Length;
-
-            pieceStart = (torrentStartOffset - torrentStartOffset % pieceLength) / pieceLength;
-
-            pieceEnd = (torrentEndOffset - torrentEndOffset % pieceLength) / pieceLength;
-            pieceEnd -= torrentEndOffset % pieceLength == 0 ? 1 : 0;
-
-            if (pieceIndex >= pieceStart &&
-                pieceIndex <= pieceEnd)
+            foreach (var file in files)
             {
-                fileOffset = (pieceIndex - pieceStart) * pieceLength;
-                fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % pieceLength : 0;
+                CreateFile(Path.Combine(directoryPath, file.FilePath), file.Length);
 
-                length += (int)Math.Min(pieceLength - length, file.Key.Length - fileOffset);
-            }
-            else if (pieceIndex < pieceStart)
-            {
-                break;
+                innerFiles.Add(file, new FileStream(Path.Combine(directoryPath, file.FilePath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
             }
 
-            torrentStartOffset += file.Key.Length;
-        }
-
-        if (length > 0)
-        {
-            pieceData = new byte[length];
-            torrentStartOffset = 0;
-            length = 0;
-
-            // read the piece
+            // calculate length of the data read (it could be less than the specified piece length)
             foreach (var file in innerFiles)
             {
                 torrentEndOffset = torrentStartOffset + file.Key.Length;
@@ -299,27 +288,65 @@ public static class PersistenceManager
                     fileOffset = (pieceIndex - pieceStart) * pieceLength;
                     fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % pieceLength : 0;
 
-                    length = (int)Math.Min(pieceLength - pieceOffset, file.Key.Length - fileOffset);
-
-                    
-                    Read(file.Value, fileOffset, length, pieceData, pieceOffset);
-
-                    pieceOffset += length;
+                    length += (int)Math.Min(pieceLength - length, file.Key.Length - fileOffset);
                 }
                 else if (pieceIndex < pieceStart)
                 {
                     break;
                 }
 
-                torrentStartOffset = torrentEndOffset;
+                torrentStartOffset += file.Key.Length;
             }
-        }
-        else
-        {
-            throw new ArgumentException("Из файла все спиздили, читать нечаго.");
-        }
 
-        return pieceData;
+            if (length > 0)
+            {
+                pieceData = new byte[length];
+                torrentStartOffset = 0;
+                length = 0;
+
+                // read the piece
+                foreach (var file in innerFiles)
+                {
+                    torrentEndOffset = torrentStartOffset + file.Key.Length;
+
+                    pieceStart = (torrentStartOffset - torrentStartOffset % pieceLength) / pieceLength;
+
+                    pieceEnd = (torrentEndOffset - torrentEndOffset % pieceLength) / pieceLength;
+                    pieceEnd -= torrentEndOffset % pieceLength == 0 ? 1 : 0;
+
+                    if (pieceIndex >= pieceStart &&
+                        pieceIndex <= pieceEnd)
+                    {
+                        fileOffset = (pieceIndex - pieceStart) * pieceLength;
+                        fileOffset -= pieceIndex > pieceStart ? torrentStartOffset % pieceLength : 0;
+
+                        length = (int)Math.Min(pieceLength - pieceOffset, file.Key.Length - fileOffset);
+
+
+                        Read(file.Value, fileOffset, length, pieceData, pieceOffset);
+
+                        pieceOffset += length;
+                    }
+                    else if (pieceIndex < pieceStart)
+                    {
+                        break;
+                    }
+
+                    torrentStartOffset = torrentEndOffset;
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Из файла все спиздили, читать нечаго.");
+            }
+
+            return pieceData;
+        }
+        finally
+        {
+            foreach (var innerFile in innerFiles)
+                innerFile.Value.Close();
+        }
     }
 
     /// <summary>
@@ -391,7 +418,7 @@ public static class PersistenceManager
             throw new ArgumentException("Incorrect file length.");
         }
     }
-    
+
     /// <summary>
     ///     Writes the specified data at the offset to the file path.
     /// </summary>

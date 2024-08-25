@@ -2,6 +2,7 @@ using static Bruteforce.Utility;
 
 namespace Tests;
 
+[NonParallelizable]
 public class SequentalTests
 {
     private Random _random;

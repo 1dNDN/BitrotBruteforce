@@ -4,6 +4,7 @@ using Bruteforce.TorrentWrapper.Extensions;
 
 namespace Tests;
 
+[NonParallelizable]
 public class PersistenceTests
 {
     private Random _random;
