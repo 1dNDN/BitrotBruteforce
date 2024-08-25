@@ -112,7 +112,19 @@ class Worker
             }
 
             sw.Stop();
+
+            long countOfHashesPerIteration = piece.Bytes.Length / 64;
+            long countOfIterations = piece.Bytes.Length * 8;
+            var countOfHashes = countOfHashesPerIteration * countOfIterations;
+            var countOfBytes = piece.Bytes.Length * countOfIterations;
+            var speedHashes = countOfHashes / sw.Elapsed.TotalSeconds;
+            var speedBytes = countOfBytes / sw.Elapsed.TotalSeconds;
+
             Console.WriteLine($"Прохуярило: {sw.Elapsed} времени на {piece.Bytes.Length} байт хуйни");
+            Console.WriteLine($"Число хешей на проход: {countOfHashesPerIteration}. \n" +
+                              $"Число проходов: {countOfIterations}. \n" +
+                              $"Число хешей всего: {countOfHashes}. \n" +
+                              $"Скорость: {(speedHashes / 1_000_000_000):N3} гигахешей в секунду или {(speedBytes / 1_000_000_000):N2} ГБ/с");
         }
     }
 
