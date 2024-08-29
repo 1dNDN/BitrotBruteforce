@@ -28,7 +28,7 @@ public class Utility
     {
         var hash = new byte[20];
 
-        OpenSSLNotMingw.SHA1(data, data.Length, hash);
+        OpenSSLMingw.SHA1(data, data.Length, hash);
 
         return hash;
     }
