@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace Bruteforce;
 
@@ -23,8 +24,14 @@ public class Utility
             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
             .ToArray();
 
-    public static byte[] GetHash(byte[] data) =>
-        SHA1.HashData(data);
+    public static byte[] GetHash(byte[] data)
+    {
+        var hash = new byte[20];
+
+        OpenSSLNotMingw.SHA1(data, data.Length, hash);
+
+        return hash;
+    }
 
 
     public static void Copy(string sourceDirectory, string targetDirectory)
@@ -60,4 +67,37 @@ public static class ThreadExtension
         foreach (var thread in threads)
             thread.Join();
     }
+}
+
+public static class LibreSSLDesktop
+{
+    [DllImport("libcrypto_libressl_onecore.dll", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void SHA1(byte[] d, int n, byte[] md);
+    //unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
+    // __attribute__ ((__bounded__(__buffer__, 1, 2)));
+}
+
+
+public static class LibreSSLOnecore
+{
+    [DllImport("libcrypto_libressl_desktop.dll", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void SHA1(byte[] d, int n, byte[] md);
+    //unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
+    // __attribute__ ((__bounded__(__buffer__, 1, 2)));
+}
+
+public static class OpenSSLMingw
+{
+    [DllImport("libcrypto-3-x64_mingw_openssl.dll", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void SHA1(byte[] d, int n, byte[] md);
+    //unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
+    // __attribute__ ((__bounded__(__buffer__, 1, 2)));
+}
+
+public static class OpenSSLNotMingw
+{
+    [DllImport("libcrypto-3-x64_openssl.dll", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void SHA1(byte[] d, int n, byte[] md);
+    //unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
+    // __attribute__ ((__bounded__(__buffer__, 1, 2)));
 }

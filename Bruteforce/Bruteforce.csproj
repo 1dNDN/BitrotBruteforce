@@ -13,6 +13,22 @@
         <Link>README.md</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="libcrypto_libressl_onecore.dll" />
+      <Content Include="libcrypto_libressl_onecore.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="libcrypto_libressl_desktop.dll" />
+      <Content Include="libcrypto_libressl_desktop.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="libcrypto-3-x64_openssl.dll" />
+      <Content Include="libcrypto-3-x64_openssl.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="libcrypto-3-x64_mingw_openssl.dll" />
+      <Content Include="libcrypto-3-x64_mingw_openssl.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
