@@ -54,7 +54,7 @@ var insertCommand = new Command("insert", "Записать в торрент ч
     indexOfPiece
 };
 
-extractCommand.SetHandler(Worker.Insert, torrentPath, dataPath, destination, indexOfPiece);
+insertCommand.SetHandler(Worker.Insert, torrentPath, dataPath, destination, indexOfPiece);
 
 var rootCommand = new RootCommand {
     bruteCommand,
