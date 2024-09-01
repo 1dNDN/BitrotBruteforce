@@ -6,7 +6,7 @@ namespace Bruteforce;
 public class BruteforceParallel
 {
     
-    public static int Bruteforce(byte[] data, byte[] hash)
+    public static int Bruteforce(byte[] data, byte[] hash, int countOfThreads)
     {
         var lockObj = new object();
         var result = -3;
@@ -16,7 +16,7 @@ public class BruteforceParallel
         
         var threads = new List<Thread>();
 
-        var threadCount = Environment.ProcessorCount;
+        var threadCount = countOfThreads;
         //var threadCount = 2;
 
         var chunkSize = data.Length / threadCount;

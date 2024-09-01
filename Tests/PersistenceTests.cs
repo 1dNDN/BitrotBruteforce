@@ -117,7 +117,7 @@ public class PersistenceTests
 
         var piece = pieces[0];
         
-        var bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
+        var bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex(), Environment.ProcessorCount);
         
         Assert.Greater(bitIndex, 0);
         

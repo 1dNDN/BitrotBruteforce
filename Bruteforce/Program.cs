@@ -15,13 +15,18 @@ var dataPath = new Argument<string>("data", description: "Путь к данны
 var restore = new Option<bool>("--restore", description: "Должна ли утилита самостоятельно восстановить данные");
 restore.AddAlias("-r");
 
+var threads = new Option<int>("--threads", description: "Сколько потоков использовать, по умолчанию все доступные");
+threads.AddAlias("-t");
+threads.SetDefaultValue(Environment.ProcessorCount);
+
 var bruteCommand = new Command("brute", "Найти и исправить битрот") {
     torrentPath,
     dataPath,
-    restore
+    restore,
+    threads
 };
 
-bruteCommand.SetHandler(Worker.DoWork, torrentPath, dataPath, restore);
+bruteCommand.SetHandler(Worker.DoWork, torrentPath, dataPath, restore, threads);
 
 var indexOfPiece = new Argument<int>("piece-index", description: "Номер части (отсчет с нуля)");
 var indexOfBit = new Argument<int>("bit-index", description: "Номер бита (отсчет с нулевого бита части)");
@@ -71,7 +76,7 @@ return rootCommand.Invoke(args);
 
 class Worker
 {
-    public static void DoWork(string torrentPath, string dataPath, bool doRepair)
+    public static void DoWork(string torrentPath, string dataPath, bool doRepair, int countOfThreads)
     {
         TorrentInfo.TryLoad(torrentPath, out var torrent);
 
@@ -103,7 +108,7 @@ class Worker
 
             var sw = Stopwatch.StartNew();
 
-            var bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
+            var bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex(), countOfThreads);
             Console.WriteLine(bitIndex);
 
             if (doRepair && bitIndex > 0)
@@ -123,18 +128,17 @@ class Worker
             else
             {
                 var byteIndex = bitIndex / 8;
+
+                var bytesPerThread =  piece.Bytes.Length / countOfThreads;
                 
-                var threadCount = Environment.ProcessorCount;
-                var bytesPerThread =  piece.Bytes.Length / threadCount;
-                
-                if(bytesPerThread * threadCount < byteIndex)
+                if(bytesPerThread * countOfThreads < byteIndex)
                 {
                     countOfCalculatedBytes = piece.Bytes.Length;
                 }
                 else
                 {
                     var workedBytesPerThread = byteIndex % bytesPerThread;
-                    countOfCalculatedBytes = workedBytesPerThread * threadCount;
+                    countOfCalculatedBytes = workedBytesPerThread * countOfThreads;
                 }
             }
             

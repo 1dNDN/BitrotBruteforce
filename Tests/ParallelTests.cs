@@ -6,11 +6,13 @@ namespace Tests;
 public class ParallelTests
 {
     private Random _random;
+    int _countOfThreads;
 
     [SetUp]
     public void Setup()
     {
         _random = new Random();
+        _countOfThreads = Environment.ProcessorCount;
     }
 
     [Test]
@@ -22,7 +24,7 @@ public class ParallelTests
 
         var hash = GetHash(data);
 
-        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash);
+        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash, _countOfThreads);
         
         Assert.AreEqual(-2, result);
     }
@@ -38,7 +40,7 @@ public class ParallelTests
         
         data[0] = (byte)(data[0] ^ 0b0000_0001);
 
-        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash);
+        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash, _countOfThreads);
         
         Assert.AreEqual(0, result);
     }
@@ -54,7 +56,7 @@ public class ParallelTests
         
         data[0] = (byte)(data[0] ^ 0b0000_0010);
 
-        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash);
+        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash, _countOfThreads);
         
         Assert.AreEqual(1, result);
     }
@@ -70,7 +72,7 @@ public class ParallelTests
         
         data[1] = (byte)(data[1] ^ 0b0000_0001);
 
-        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash);
+        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash, _countOfThreads);
         
         Assert.AreEqual(8, result);
     }
@@ -86,7 +88,7 @@ public class ParallelTests
         
         data[100] = (byte)(data[100] ^ 0b0000_1000);
 
-        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash);
+        var result = Bruteforce.BruteforceParallel.Bruteforce(data, hash, _countOfThreads);
         
         Assert.AreEqual(803, result);
     }
