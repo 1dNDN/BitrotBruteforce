@@ -188,7 +188,7 @@ class Worker
         var match = Regex.Match(filename, pattern);
         if (match.Groups.Count < 4)
         {
-            throw new FileNotFoundException("Ожидался формат BROKENPIECE-<TorrentHash>-<PieceIndex>-<PieceHash>.TOBRUTE, а пришла хуйня");
+            throw new FileNotFoundException("Ожидался формат brokenpiece-<TorrentHash>-<PieceIndex>-<PieceHash>.tobrute, а пришла хуйня");
         }
 
         var torrentHash = match.Groups[1].Value;
