@@ -12,6 +12,11 @@
     <option name="EXECUTE_IN_TERMINAL" value="true" />
     <option name="EXECUTE_SCRIPT_FILE" value="false" />
     <envs />
-    <method v="2" />
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Mac-x86-64" run_configuration_type="DotNetFolderPublish" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Portable" run_configuration_type="DotNetFolderPublish" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Linux" run_configuration_type="DotNetFolderPublish" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Windows" run_configuration_type="DotNetFolderPublish" />
+    </method>
   </configuration>
 </component>
