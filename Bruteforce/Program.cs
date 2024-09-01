@@ -113,14 +113,38 @@ class Worker
 
             sw.Stop();
 
-            long countOfHashesPerIteration = piece.Bytes.Length / 64;
-            long countOfIterations = piece.Bytes.Length * 8;
+            var length = 0;
+
+            if (bitIndex < 0)
+            {
+                length = piece.Bytes.Length;
+            }
+            else
+            {
+                var byteIndex = bitIndex / 8;
+                
+                var threadCount = Environment.ProcessorCount;
+                var bytesPerThread =  piece.Bytes.Length / threadCount;
+                
+                if(bytesPerThread * threadCount < byteIndex)
+                {
+                    length = piece.Bytes.Length;
+                }
+                else
+                {
+                    var workedBytesPerThread = byteIndex % bytesPerThread;
+                    length = workedBytesPerThread * threadCount;
+                }
+            }
+            
+            long countOfHashesPerIteration = length / 64;
+            long countOfIterations = length * 8;
             var countOfHashes = countOfHashesPerIteration * countOfIterations;
-            var countOfBytes = piece.Bytes.Length * countOfIterations;
+            var countOfBytes = length * countOfIterations;
             var speedHashes = countOfHashes / sw.Elapsed.TotalSeconds;
             var speedBytes = countOfBytes / sw.Elapsed.TotalSeconds;
 
-            Console.WriteLine($"Прохуярило: {sw.Elapsed} времени на {piece.Bytes.Length} байт хуйни");
+            Console.WriteLine($"Прохуярило: {sw.Elapsed} времени на {length} байт хуйни");
             Console.WriteLine($"Число хешей на проход: {countOfHashesPerIteration}. \n" +
                               $"Число проходов: {countOfIterations}. \n" +
                               $"Число хешей всего: {countOfHashes}. \n" +

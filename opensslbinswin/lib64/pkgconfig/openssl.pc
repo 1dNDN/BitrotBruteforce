@@ -1,0 +1,9 @@
+prefix=
+exec_prefix=${prefix}
+libdir=
+includedir=${prefix}/
+
+Name: OpenSSL
+Description: Secure Sockets Layer and cryptography libraries and tools
+Version: 3.4.0-dev
+Requires: libssl libcrypto
