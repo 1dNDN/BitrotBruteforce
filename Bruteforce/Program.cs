@@ -9,17 +9,17 @@ using System.CommandLine;
 using System.Text.RegularExpressions;
 
 
-var torrentPath = new Argument<string>("torrent", description: "Путь к торрент-файлу");
-var dataPath = new Argument<string>("data", description: "Путь к данным");
+var torrentPath = new Argument<string>("torrent", description: "Path to .torrent");
+var dataPath = new Argument<string>("data", description: "Path to data");
 
-var restore = new Option<bool>("--restore", description: "Должна ли утилита самостоятельно восстановить данные");
+var restore = new Option<bool>("--restore", description: "Change the data on disk after finding the rotten bit");
 restore.AddAlias("-r");
 
-var threads = new Option<int>("--threads", description: "Сколько потоков использовать, по умолчанию все доступные");
+var threads = new Option<int>("--threads", description: "Number of threads to use, default: all available");
 threads.AddAlias("-t");
 threads.SetDefaultValue(Environment.ProcessorCount);
 
-var bruteCommand = new Command("brute", "Найти и исправить битрот") {
+var bruteCommand = new Command("brute", "Find and fix bitrot") {
     torrentPath,
     dataPath,
     restore,
@@ -28,11 +28,11 @@ var bruteCommand = new Command("brute", "Найти и исправить бит
 
 bruteCommand.SetHandler(Worker.DoWork, torrentPath, dataPath, restore, threads);
 
-var indexOfPiece = new Argument<int>("piece-index", description: "Номер части (отсчет с нуля)");
-var indexOfBit = new Argument<int>("bit-index", description: "Номер бита (отсчет с нулевого бита части)");
+var indexOfPiece = new Argument<int>("piece-index", description: "Part no. (starts with 0)");
+var indexOfBit = new Argument<int>("bit-index", description: "Bit no. (starts with 0 inside the part)");
 
 
-var restoreCommand = new Command("restore", "Исправить битрот с известным местом") {
+var restoreCommand = new Command("restore", "Fix bitrot at known location") {
     torrentPath,
     dataPath,
     indexOfPiece,
@@ -41,9 +41,9 @@ var restoreCommand = new Command("restore", "Исправить битрот с 
 
 restoreCommand.SetHandler(Worker.DoWork, torrentPath, dataPath, indexOfPiece, indexOfBit);
 
-var destination = new Argument<string>("destination", description: "Путь к файлу с частью");
+var destination = new Argument<string>("destination", description: "Path to torrent part file");
 
-var extractCommand = new Command("extract", "Вытащить из торрента часть") {
+var extractCommand = new Command("extract", "Extract tor. piece out of torrent data at index") {
     torrentPath,
     dataPath,
     destination,
@@ -52,7 +52,7 @@ var extractCommand = new Command("extract", "Вытащить из торрен�
 
 extractCommand.SetHandler(Worker.Extract, torrentPath, dataPath, destination, indexOfPiece);
 
-var insertCommand = new Command("insert", "Записать в торрент часть") {
+var insertCommand = new Command("insert", "Insert the tor. piece into torrent data at index") {
     torrentPath,
     dataPath,
     destination,
@@ -61,9 +61,9 @@ var insertCommand = new Command("insert", "Записать в торрент ч
 
 insertCommand.SetHandler(Worker.Insert, torrentPath, dataPath, destination, indexOfPiece);
 
-var pieceBinPath = new Argument<string>("pieceBinPath", description: "Путь к блобу части с именем в формате brokenpiece-<TorrentHash>-<PieceIndex>-<PieceHash>.tobrute");
+var pieceBinPath = new Argument<string>("pieceBinPath", description: "Path to piece blob in format: brokenpiece-<TorrentHash>-<PieceIndex>-<PieceHash>.tobrute");
 
-var brutePieceCommand = new Command("brutepiece", "Сбрутить готовый блоб с известным хешем") {
+var brutePieceCommand = new Command("brutepiece", "Bruteforce ready blob with known hash") {
     pieceBinPath,
     restore,
     threads
@@ -71,9 +71,9 @@ var brutePieceCommand = new Command("brutepiece", "Сбрутить готовы
 
 brutePieceCommand.SetHandler(Worker.BrutePieceBlob, pieceBinPath, restore, threads);
 
-var destinationFolder = new Argument<string>("destination", description: "Путь к папке с частями");
+var destinationFolder = new Argument<string>("destination", description: "Path to piece blobs directory");
 
-var brutePrepareCommand = new Command("bruteprepare", "Сгенерировать файлы с блобами для последующего восстановления") {
+var brutePrepareCommand = new Command("bruteprepare", "Generate piece blobs for restoration at a later time") {
     torrentPath,
     dataPath,
     destinationFolder
@@ -90,7 +90,7 @@ var rootCommand = new RootCommand {
     brutePrepareCommand
 };
 
-rootCommand.Description = "Хуярим всякую хуйню с похуяренными жизнью торрентами";
+rootCommand.Description = "Utility to manipulate 1-bit-broken bitrotten torrents";
 
 return rootCommand.Invoke(args);
 
@@ -103,13 +103,13 @@ class Worker
         TorrentInfo.TryLoad(torrentPath, out var torrent);
 
         if (torrent.Files.Length == 1 && torrent.Files[0].FilePath.Contains("Posobie_dlja_samoubijz"))
-            Console.WriteLine("Нихуя себе, сегодня хуярим петуха!");
+            Console.WriteLine("Nihuya sebe, segodnya huyarim petuha!");
         else
-            Console.WriteLine("Опять хуйню прислали");
+            Console.WriteLine("Loaded .torrent, processing");
 
         var pieces = PersistenceManager.Verify(dataPath, torrent);
 
-        Console.WriteLine($"Похуевило {pieces.Count} частям");
+        Console.WriteLine($"Found {pieces.Count} borken pieces");
 
         foreach (var piece in pieces)
         {
@@ -122,19 +122,19 @@ class Worker
         TorrentInfo.TryLoad(torrentPath, out var torrent);
 
         if (torrent.Files.Length == 1 && torrent.Files[0].FilePath.Contains("Posobie_dlja_samoubijz"))
-            Console.WriteLine("Нихуя себе, сегодня хуярим петуха!");
+            Console.WriteLine("Nihuya sebe, segodnya huyarim petuha!");
         else
-            Console.WriteLine("Опять хуйню прислали");
+            Console.WriteLine("Loaded .torrent, processing");
 
         var pieces = PersistenceManager.Verify(dataPath, torrent);
 
-        Console.WriteLine($"Похуевило {pieces.Count} частям");
+        Console.WriteLine($"Found {pieces.Count} broken pieces");
 
         foreach (var piece in pieces)
         {
             if(!piece.Restoreable)
             {
-                Console.WriteLine($"Часть номер {piece.Index} состоит исключительно из нулей и не подлежит расхуевливанию");
+                Console.WriteLine($"Piece number {piece.Index} is full of zeros and can't be restored");
                 continue;
             }
             
@@ -143,7 +143,7 @@ class Worker
             
             File.WriteAllBytes(path, piece.Bytes);
             
-            Console.WriteLine($"Записали хуйню номер {piece.Index} по адресу {path}");
+            Console.WriteLine($"Wrote blob for piece no. {piece.Index} to {path}");
         }
     }
 
@@ -156,11 +156,11 @@ class Worker
 
         Console.WriteLine();
 
-        Console.WriteLine($"Хуярим часть номер {piece.Index}");
+        Console.WriteLine($"Processing piece no. {piece.Index}");
 
         if (!piece.Restoreable)
         {
-            Console.WriteLine("Тут одни нули, хуйня выходит");
+            Console.WriteLine("Piece is full of zeros, can't fix it");
             return;
         }
 
@@ -188,7 +188,7 @@ class Worker
         var match = Regex.Match(filename, pattern);
         if (match.Groups.Count < 4)
         {
-            throw new FileNotFoundException("Ожидался формат brokenpiece-<TorrentHash>-<PieceIndex>-<PieceHash>.tobrute, а пришла хуйня");
+            throw new FileNotFoundException("Expected format brokenpiece-<TorrentHash>-<PieceIndex>-<PieceHash>.tobrute, got unreadable garbage instead");
         }
 
         var torrentHash = match.Groups[1].Value;
@@ -196,7 +196,7 @@ class Worker
         var pieceHash = match.Groups[3].Value;
         
         Console.WriteLine($"TorrentHash: {torrentHash}");
-        Console.WriteLine($"Хуярим часть номер: {pieceIndex}");
+        Console.WriteLine($"Processing piece no.: {pieceIndex}");
         Console.WriteLine($"PieceHash: {pieceHash}");
 
         var newPath = Path.GetFileNameWithoutExtension(dataPath);
@@ -207,7 +207,7 @@ class Worker
     
         if (!data.IsRestoreable())
         {
-            Console.WriteLine("Тут одни нули, хуйня выходит");
+            Console.WriteLine("Piece full of zeros, can't restore");
             MoveToFailed(dataPath, newPath, data);
             return;
         }
@@ -219,7 +219,7 @@ class Worker
 
         if (bitIndex > 0)
         {
-            Console.WriteLine("Успешно расхуевлено!");
+            Console.WriteLine("Successfully fixed blob!");
 
             if (doRepair)
             {
@@ -230,12 +230,12 @@ class Worker
                 File.WriteAllBytes(bruteok, data);
                 File.Delete(dataPath);
 
-                Console.WriteLine($"Новый путь {bruteok}");
+                Console.WriteLine($"New blob path: {bruteok}");
             }
         }
         else
         {
-            Console.WriteLine("Избыточно нахуевлено, расхуевить не получилось");
+            Console.WriteLine("Excessive data corruption, failed to fix");
             
             if (doRepair)
                 MoveToFailed(dataPath, newPath, data);
@@ -253,7 +253,7 @@ class Worker
         File.WriteAllBytes(brutefailed, data);
         File.Delete(dataPath);
             
-        Console.WriteLine($"Новый путь {brutefailed}");
+        Console.WriteLine($"New blob path: {brutefailed}");
     }
 
     private static void MeasureSpeed(int countOfThreads, int totalLength, int bitIndex, Stopwatch sw)
@@ -289,11 +289,11 @@ class Worker
         var speedHashes = countOfHashes / sw.Elapsed.TotalSeconds;
         var speedBytes = countOfBytes / sw.Elapsed.TotalSeconds;
 
-        Console.WriteLine($"Прохуярило: {sw.Elapsed} времени на {totalLength} байт хуйни");
-        Console.WriteLine($"Число хешей на проход: {countOfHashesPerIteration}. \n" +
-                          $"Число проходов: {elapsedIterations}. \n" +
-                          $"Число хешей всего: {countOfHashes}. \n" +
-                          $"Скорость: {(speedHashes / 1_000_000_000):N3} гигахешей в секунду или {(speedBytes / 1_000_000_000):N2} ГБ/с");
+        Console.WriteLine($"Time spent: {sw.Elapsed} on {totalLength} bytes of data");
+        Console.WriteLine($"Amount of hashes per run: {countOfHashesPerIteration}. \n" +
+                          $"Amount of runs: {elapsedIterations}. \n" +
+                          $"Total hashes: {countOfHashes}. \n" +
+                          $"Speed: {(speedHashes / 1_000_000_000):N3} GH/s or {(speedBytes / 1_000_000_000):N2} GB/s");
     }
 
     public static void DoWork(string torrentPath, string dataPath, int pieceIndex, int bitIndex)
@@ -301,20 +301,20 @@ class Worker
         TorrentInfo.TryLoad(torrentPath, out var torrent);
 
         if (torrent.Files.Length == 1 && torrent.Files[0].FilePath.Contains("Posobie_dlja_samoubijz"))
-            Console.WriteLine("Нихуя себе, сегодня хуярим петуха!");
+            Console.WriteLine("Nihua sebe, segodnya huyarim petuha!");
         else
-            Console.WriteLine("Опять хуйню прислали");
+            Console.WriteLine("Loaded .torrent, processing");
 
         var pieces = PersistenceManager.Verify(dataPath, torrent);
 
-        Console.WriteLine($"Похуевило {pieces.Count} частям");
+        Console.WriteLine($"Found {pieces.Count} broken pieces");
 
         foreach (var piece in pieces)
         {
-            Console.WriteLine($"Хуярим часть номер {piece.Index}");
+            Console.WriteLine($"Processing piece no. {piece.Index}");
 
             PersistenceManager.FlipBit(dataPath, torrent, piece.Index, bitIndex);
-            Console.WriteLine("Нахуярили");
+            Console.WriteLine("Done processing piece");
         }
     }
 
@@ -326,7 +326,7 @@ class Worker
         
         File.WriteAllBytes(destination, bytes);
         
-        Console.WriteLine($"Успешно насрато {bytes.Length} байтов хуйни в {destination}");
+        Console.WriteLine($"Successfully extracted {bytes.Length} bytes of data to {destination}");
     }
     
     public static void Insert(string torrentPath, string dataPath, string destination, int pieceIndex)
@@ -337,6 +337,6 @@ class Worker
         
         PersistenceManager.Put(dataPath, torrent.Files, torrent.PieceLength, pieceIndex, bytes);
         
-        Console.WriteLine($"Успешно всрато {bytes.Length} байтов хуйни в {destination}");
+        Console.WriteLine($"Successfully inserted {bytes.Length} bytes of data into {destination}");
     }
 }
