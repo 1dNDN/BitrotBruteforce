@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Bruteforce;
 
-public class Utility
+public static class Utility
 {
     public static bool IsEqual(byte[] left, byte[] right)
     {
@@ -63,29 +63,30 @@ public class Utility
         // 7,65 ГБ/с
         return SHA1.HashData(data);
     }
-}
-
-//unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
-// __attribute__ ((__bounded__(__buffer__, 1, 2)));
-// 11,23 ГБ/с
-public static class LibreSSLDesktop
-{
-    [DllImport("libcrypto_libressl_onecore.dll", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void SHA1(byte[] d, int n, byte[] md);
-}
-
-// 32,71 ГБ/с
-public static class OpenSSLCl
-{
-    [DllImport("libcrypto-3-x64_cl.dll", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void SHA1(byte[] d, int n, byte[] md);
-}
-
-public static class ThreadExtension
-{
+    
     public static void WaitAll(this IEnumerable<Thread> threads)
     {
         foreach (var thread in threads)
             thread.Join();
     }
+
+    public static bool IsRestoreable(this byte[] array)
+    {
+        return array.Any(b => b != 0);
+    }
+
+    public static void FlipBit(this byte[] data, int bitIndex)
+    {
+        data[bitIndex >> 3] = (byte)(data[bitIndex >> 3] ^ (1 << (bitIndex % 8)));
+    }
+}
+
+//unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
+// __attribute__ ((__bounded__(__buffer__, 1, 2)));
+
+// 32,71 ГБ/с
+public static class OpenSSLCl
+{
+    [DllImport("libs/libcrypto-3-x64_cl", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void SHA1(byte[] d, int n, byte[] md);
 }

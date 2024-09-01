@@ -10,5 +10,5 @@ public class BrokenPiece(byte[] bytes, long index, string hash)
 
     public string Hash { get; } = hash;
 
-    public bool Restoreable => Bytes.Any(b => b != 0);
+    public bool Restoreable => Bytes.IsRestoreable();
 }

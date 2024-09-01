@@ -24,6 +24,10 @@
       <Content Update="libs\libcrypto-3-x64_cl.dll">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="libs\libcrypto-3-x64_cl.dll" />
+      <Content Include="libs\libcrypto-3-x64_cl.dll">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
