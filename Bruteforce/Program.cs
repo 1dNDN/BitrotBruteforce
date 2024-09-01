@@ -134,7 +134,7 @@ class Worker
         {
             if(!piece.Restoreable)
             {
-                Console.WriteLine($"Часть номер {piece.Index} состоит исключительно из нулей и не подлежит восстановлению");
+                Console.WriteLine($"Часть номер {piece.Index} состоит исключительно из нулей и не подлежит расхуевливанию");
                 continue;
             }
             
@@ -142,6 +142,8 @@ class Worker
             var path = Path.Combine(destinationFolder, $"brokenpiece-{torrent.InfoHash.ToUpperInvariant()}-{piece.Index}-{piece.Hash}.tobrute");
             
             File.WriteAllBytes(path, piece.Bytes);
+            
+            Console.WriteLine($"Записали хуйню номер {piece.Index} по адресу {path}");
         }
     }
 
@@ -181,12 +183,12 @@ class Worker
     {
         var filename = Path.GetFileName(dataPath).ToUpperInvariant();
         
-        string pattern = @"brokenpiece-([0-9A-F]{40})-([0-9]+)-([0-9A-F]{40}).tobrute";
+        string pattern = @"BROKENPIECE-([0-9A-F]{40})-([0-9]+)-([0-9A-F]{40}).TOBRUTE";
     
         var match = Regex.Match(filename, pattern);
         if (match.Groups.Count < 4)
         {
-            throw new FileNotFoundException("Ожидался формат brokenpiece-<TorrentHash>-<PieceIndex>-<PieceHash>.tobrute, а пришла хуйня");
+            throw new FileNotFoundException("Ожидался формат BROKENPIECE-<TorrentHash>-<PieceIndex>-<PieceHash>.TOBRUTE, а пришла хуйня");
         }
 
         var torrentHash = match.Groups[1].Value;
