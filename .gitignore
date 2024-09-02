@@ -6,4 +6,5 @@ riderModule.iml
 .idea
 .vs
 /Data/
-*CudaBitrotFinder/**/x64/*
+*BitrotFinder/bin/*
+*BitrotFinder/x64/*

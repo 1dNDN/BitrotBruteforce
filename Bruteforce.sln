@@ -4,7 +4,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruteforce", "Bruteforce\Br
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{365E23FD-9546-426A-A43A-7790ED35C38B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaBitrotFinder", "CudaBitrotFinder\CudaBitrotFinder\CudaBitrotFinder.vcxproj", "{689208EA-24A1-48C5-9ACE-202640267B40}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaUnalignedBitrotFinder", "CudaUnalignedBitrotFinder\CudaUnalignedBitrotFinder.vcxproj", "{AC30D969-E8D4-43A5-9934-9B80310A01EE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaAlignedBitrotFinder", "CudaAlignedBitrotFinder\CudaAlignedBitrotFinder.vcxproj", "{689208EA-24A1-48C5-9ACE-202640267B40}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,13 +18,17 @@ Global
 		{3DB15FC8-D5DD-463A-A145-99F6DBE90EC1}.Release|x64.Build.0 = Release|x64
 		{3DB15FC8-D5DD-463A-A145-99F6DBE90EC1}.Debug|x64.ActiveCfg = Debug|x64
 		{3DB15FC8-D5DD-463A-A145-99F6DBE90EC1}.Debug|x64.Build.0 = Debug|x64
-		{689208EA-24A1-48C5-9ACE-202640267B40}.Release|x64.ActiveCfg = Release|x64
-		{689208EA-24A1-48C5-9ACE-202640267B40}.Release|x64.Build.0 = Release|x64
-		{689208EA-24A1-48C5-9ACE-202640267B40}.Debug|x64.ActiveCfg = Debug|x64
-		{689208EA-24A1-48C5-9ACE-202640267B40}.Debug|x64.Build.0 = Debug|x64
 		{365E23FD-9546-426A-A43A-7790ED35C38B}.Release|x64.ActiveCfg = Release|x64
 		{365E23FD-9546-426A-A43A-7790ED35C38B}.Release|x64.Build.0 = Release|x64
 		{365E23FD-9546-426A-A43A-7790ED35C38B}.Debug|x64.ActiveCfg = Debug|x64
 		{365E23FD-9546-426A-A43A-7790ED35C38B}.Debug|x64.Build.0 = Debug|x64
+		{AC30D969-E8D4-43A5-9934-9B80310A01EE}.Release|x64.ActiveCfg = Release|x64
+		{AC30D969-E8D4-43A5-9934-9B80310A01EE}.Release|x64.Build.0 = Release|x64
+		{AC30D969-E8D4-43A5-9934-9B80310A01EE}.Debug|x64.ActiveCfg = Debug|x64
+		{AC30D969-E8D4-43A5-9934-9B80310A01EE}.Debug|x64.Build.0 = Debug|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Release|x64.ActiveCfg = Release|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Release|x64.Build.0 = Release|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Debug|x64.ActiveCfg = Debug|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 EndGlobal
