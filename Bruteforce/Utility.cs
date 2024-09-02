@@ -51,7 +51,7 @@ public static class Utility
     
     public static byte[] GetHash(byte[] data)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             var hash = new byte[20];
         

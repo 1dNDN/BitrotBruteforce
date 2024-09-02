@@ -28,6 +28,10 @@
       <Content Include="libs\libcrypto-3-x64_cl.dll">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+      <None Remove="libs\libcrypto-3-x64_cl.so" />
+      <Content Include="libs\libcrypto-3-x64_cl.so">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
