@@ -127,4 +127,43 @@ public class PersistenceTests
         
         Assert.IsEmpty(fixedPieces);
     }
+    
+    [Test]
+    public void TestRepairBrokenFileCuda()
+    {
+        const string pathToDir = "TestData/Damaged";
+        const string pathToTorrentFile = "TestData/Petukh.torrent";
+
+        const string tempPath = "Temp";
+        
+        Directory.CreateDirectory(tempPath);
+        
+        foreach (var file in Directory.GetFiles(tempPath))
+            File.Delete(file);
+        
+        Utility.Copy(pathToDir, tempPath);
+        
+        var loadSuccess = TorrentInfo.TryLoad(pathToTorrentFile, out var torrent);
+    
+        Assert.AreEqual(7, torrent.PiecesCount);
+        Assert.IsTrue(loadSuccess);
+        
+        var pieces = PersistenceManager.Verify(tempPath, torrent);
+        
+        Assert.AreEqual(1, pieces.Count);
+        Assert.AreEqual("F206F638CE6B2942D3BF2C288982FB875BCD5401", pieces[0].Hash);
+        Assert.AreEqual(3, pieces[0].Index);
+
+        var piece = pieces[0];
+        
+        var bitIndex = BruteforceCuda.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
+        
+        Assert.Greater(bitIndex, 0);
+        
+        PersistenceManager.FlipBit(tempPath, torrent, piece.Index, bitIndex);
+        
+        var fixedPieces = PersistenceManager.Verify(tempPath, torrent);
+        
+        Assert.IsEmpty(fixedPieces);
+    }
 }

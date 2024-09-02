@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Release;Debug</Configurations>
+        <Platforms>x64</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
@@ -47,4 +49,15 @@
       <None Remove="Properties\launchSettings.json" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\CudaBitrotFinder\CudaBitrotFinder\CudaBitrotFinder.vcxproj">
+            <Project>{689208EA-24A1-48C5-9ACE-202640267B40}</Project>
+            <Name>CudaBitrotFinder</Name>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <OutputItemType>Content</OutputItemType>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <SetPlatform>Platform=x64</SetPlatform>
+            <SetConfiguration>Configuration=Release Static DLL</SetConfiguration>
+        </ProjectReference>
+    </ItemGroup>
 </Project>

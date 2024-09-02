@@ -19,14 +19,18 @@ var threads = new Option<int>("--threads", description: "Number of threads to us
 threads.AddAlias("-t");
 threads.SetDefaultValue(Environment.ProcessorCount);
 
+var useGpu = new Option<bool>("--gpu", description: "Use CUDA-compatible gpu");
+useGpu.AddAlias("-g");
+
 var bruteCommand = new Command("brute", "Find and fix bitrot") {
     torrentPath,
     dataPath,
     restore,
-    threads
+    threads,
+    useGpu
 };
 
-bruteCommand.SetHandler(Worker.DoWork, torrentPath, dataPath, restore, threads);
+bruteCommand.SetHandler(Worker.DoWork, torrentPath, dataPath, restore, threads, useGpu);
 
 var indexOfPiece = new Argument<int>("piece-index", description: "Part no. (starts with 0)");
 var indexOfBit = new Argument<int>("bit-index", description: "Bit no. (starts with 0 inside the part)");
@@ -66,10 +70,11 @@ var pieceBinPath = new Argument<string>("pieceBinPath", description: "Path to pi
 var brutePieceCommand = new Command("brutepiece", "Bruteforce ready blob with known hash") {
     pieceBinPath,
     restore,
-    threads
+    threads,
+    useGpu
 };
 
-brutePieceCommand.SetHandler(Worker.BrutePieceBlob, pieceBinPath, restore, threads);
+brutePieceCommand.SetHandler(Worker.BrutePieceBlob, pieceBinPath, restore, threads, useGpu);
 
 var destinationFolder = new Argument<string>("destination", description: "Path to piece blobs directory");
 
@@ -98,7 +103,7 @@ return rootCommand.Invoke(args);
 
 class Worker
 {
-    public static void DoWork(string torrentPath, string dataPath, bool doRepair, int countOfThreads)
+    public static void DoWork(string torrentPath, string dataPath, bool doRepair, int countOfThreads, bool useGpu)
     {
         TorrentInfo.TryLoad(torrentPath, out var torrent);
 
@@ -113,7 +118,7 @@ class Worker
 
         foreach (var piece in pieces)
         {
-            BrutePieceFromTorrent(dataPath, doRepair, countOfThreads, piece, torrent);
+            BrutePieceFromTorrent(dataPath, doRepair, countOfThreads, piece, torrent, useGpu);
         }
     }
     
@@ -147,7 +152,7 @@ class Worker
         }
     }
 
-    private static void BrutePieceFromTorrent(string dataPath, bool doRepair, int countOfThreads, BrokenPiece piece, TorrentInfo torrent)
+    private static void BrutePieceFromTorrent(string dataPath, bool doRepair, int countOfThreads, BrokenPiece piece, TorrentInfo torrent, bool useGpu)
     {
         foreach (var b in piece.Hash.ToByteArrayFromHex())
         {
@@ -166,9 +171,14 @@ class Worker
 
         var sw = Stopwatch.StartNew();
 
-        var bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex(), countOfThreads);
+        int bitIndex;
+        
+        if (useGpu)
+            bitIndex = BruteforceCuda.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
+        else
+            bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex(), countOfThreads);
+        
         Console.WriteLine(bitIndex);
-
         if (doRepair && bitIndex > 0)
         {
             PersistenceManager.FlipBit(dataPath, torrent, piece.Index, bitIndex);
@@ -179,7 +189,7 @@ class Worker
         MeasureSpeed(countOfThreads, piece.Bytes.Length, bitIndex, sw);
     }
     
-    public static void BrutePieceBlob(string dataPath, bool doRepair, int countOfThreads)
+    public static void BrutePieceBlob(string dataPath, bool doRepair, int countOfThreads, bool useGpu)
     {
         var filename = Path.GetFileName(dataPath).ToUpperInvariant();
         
@@ -214,7 +224,13 @@ class Worker
     
         var sw = Stopwatch.StartNew();
     
-        var bitIndex = BruteforceParallel.Bruteforce(data, pieceHash.ToByteArrayFromHex(), countOfThreads);
+        int bitIndex;
+        
+        if (useGpu)
+            bitIndex = BruteforceCuda.Bruteforce(data, pieceHash.ToByteArrayFromHex());
+        else
+            bitIndex = BruteforceParallel.Bruteforce(data, pieceHash.ToByteArrayFromHex(), countOfThreads);
+        
         Console.WriteLine(bitIndex);
 
         if (bitIndex > 0)
@@ -310,7 +326,7 @@ class Worker
         Console.WriteLine($"Found {pieces.Count} broken pieces");
 
         foreach (var piece in pieces)
-        {
+        { // TODO: че за хуйню я тут понаписал, исправить надо
             Console.WriteLine($"Processing piece no. {piece.Index}");
 
             PersistenceManager.FlipBit(dataPath, torrent, piece.Index, bitIndex);
