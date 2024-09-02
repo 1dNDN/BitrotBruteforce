@@ -57,7 +57,7 @@
             <OutputItemType>Content</OutputItemType>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <SetPlatform>Platform=x64</SetPlatform>
-            <SetConfiguration>Configuration=Release Static DLL</SetConfiguration>
+            <SetConfiguration>Configuration=Release</SetConfiguration>
         </ProjectReference>
     </ItemGroup>
 </Project>
