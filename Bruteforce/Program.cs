@@ -6,6 +6,7 @@ using Bruteforce;
 using Bruteforce.TorrentWrapper;
 using Bruteforce.TorrentWrapper.Extensions;
 using System.CommandLine;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 
@@ -174,10 +175,23 @@ class Worker
         int bitIndex;
         
         if (useGpu)
-            bitIndex = BruteforceCuda.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Console.WriteLine("YOUR LINUX IS MADE FOR SUFFERING, NOT FOR SPEED");
+                Console.WriteLine("THE GPU ACCELERATION FUNCTION IS NOT AVAILABLE BECAUSE FUCK YOU WITH YOUR FUCKING LINUX");
+                Console.WriteLine("!!!!!");
+                bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex(), countOfThreads);
+            }
+            else
+            {
+                bitIndex = BruteforceCuda.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex());
+            }
         else
+        {
+            Console.WriteLine("YOU REALLY WANT TO NOT USE GPU?!!");
             bitIndex = BruteforceParallel.Bruteforce(piece.Bytes, piece.Hash.ToByteArrayFromHex(), countOfThreads);
-        
+        }
+
         Console.WriteLine(bitIndex);
         if (doRepair && bitIndex > 0)
         {
@@ -227,10 +241,26 @@ class Worker
         int bitIndex;
         
         if (useGpu)
-            bitIndex = BruteforceCuda.Bruteforce(data, pieceHash.ToByteArrayFromHex());
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Console.WriteLine("YOUR LINUX IS MADE FOR SUFFERING, NOT FOR SPEED");
+                Console.WriteLine("THE GPU ACCELERATION FUNCTION IS NOT AVAILABLE BECAUSE FUCK YOU WITH YOUR FUCKING LINUX");
+                Console.WriteLine("!!!!!");
+                bitIndex = BruteforceParallel.Bruteforce(data, pieceHash.ToByteArrayFromHex(), countOfThreads);
+            }
+            else
+            {
+                bitIndex = BruteforceCuda.Bruteforce(data, pieceHash.ToByteArrayFromHex());
+            }
+
+        }
         else
+        {
+            Console.WriteLine("YOU REALLY WANT TO NOT USE GPU?!!");
             bitIndex = BruteforceParallel.Bruteforce(data, pieceHash.ToByteArrayFromHex(), countOfThreads);
-        
+        }
+
         Console.WriteLine(bitIndex);
 
         if (bitIndex > 0)
