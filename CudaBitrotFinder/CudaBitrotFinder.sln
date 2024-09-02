@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaBitrotFinder", "CudaBitrotFinder\CudaBitrotFinder.vcxproj", "{689208EA-24A1-48C5-9ACE-202640267B40}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release Static DLL|x64 = Release Static DLL|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Debug|x64.ActiveCfg = Debug|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Debug|x64.Build.0 = Debug|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Release Static DLL|x64.ActiveCfg = Release Static DLL|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Release Static DLL|x64.Build.0 = Release Static DLL|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Release|x64.ActiveCfg = Release|x64
+		{689208EA-24A1-48C5-9ACE-202640267B40}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C49BECF7-4861-45A5-B6F1-B25700C43868}
+	EndGlobalSection
+EndGlobal
