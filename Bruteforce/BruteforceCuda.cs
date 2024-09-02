@@ -33,12 +33,12 @@ public partial class BruteforceCuda
 // В result попадает индекс бита, который нужно флипнуть, либо 4294967295 (-1 в unsigned) если хеш-сумма не найдена
 public class BruteforceAligned
 {
-    [DllImport("CudaAlignedBitrotFinder", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libs/CudaAlignedBitrotFinder", CallingConvention = CallingConvention.Cdecl)]
     public static extern void bruteforceBits(byte[] pieceData, byte[] pieceHash, int pieceSize, ref uint result);
 }
 
 public class BruteforceUnaligned
 {
-    [DllImport("CudaUnalignedBitrotFinder", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("libs/CudaUnalignedBitrotFinder", CallingConvention = CallingConvention.Cdecl)]
     public static extern void bruteforceBits(byte[] pieceData, byte[] pieceHash, int pieceSize, ref uint result);
 }
