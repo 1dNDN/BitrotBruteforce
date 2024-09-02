@@ -1,6 +1,6 @@
 ﻿<component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Запаковать" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value=" Import-module -Name Microsoft.PowerShell.Archive -MinimumVersion '1.2.5'; Compress-Archive -Force -Path C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\net8.0\publish -DestinationPath C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\crossplatform.zip; Compress-Archive -Force -Path C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\net8.0\linux-x64\publish -DestinationPath C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\linux.zip; Compress-Archive -Force -Path C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\net8.0\win-x64\publish -DestinationPath C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\windows.zip; Compress-Archive -Force -Path C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\net8.0\osx-x64\publish -DestinationPath C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\osx-x64.zip" />
+    <option name="SCRIPT_TEXT" value="Import-module -Name Microsoft.PowerShell.Archive -MinimumVersion '1.2.5'; Compress-Archive -Force -Path C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\net8.0\publish -DestinationPath C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\crossplatform.zip; Compress-Archive -Force -Path C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\net8.0\linux-x64\publish -DestinationPath C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\linux.zip; Compress-Archive -Force -Path C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\net8.0\win-x64\publish -DestinationPath C:\Users\nikit\RiderProjects\Bruteforce\Bruteforce\bin\Release\windows.zip;" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
     <option name="SCRIPT_OPTIONS" value="" />
@@ -13,7 +13,6 @@
     <option name="EXECUTE_SCRIPT_FILE" value="false" />
     <envs />
     <method v="2">
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Mac-x86-64" run_configuration_type="DotNetFolderPublish" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="Portable" run_configuration_type="DotNetFolderPublish" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="Linux" run_configuration_type="DotNetFolderPublish" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="Windows" run_configuration_type="DotNetFolderPublish" />
