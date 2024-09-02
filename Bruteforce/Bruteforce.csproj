@@ -48,4 +48,24 @@
     <ItemGroup>
       <None Remove="Properties\launchSettings.json" />
     </ItemGroup>
+    
+    <ItemGroup>
+        <ProjectReference Include="..\CudaAlignedBitrotFinder/CudaAlignedBitrotFinder.vcxproj">
+            <Project>{689208EA-24A1-48C5-9ACE-202640267B40}</Project>
+            <Name>CudaAlignedBitrotFinder</Name>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <OutputItemType>Content</OutputItemType>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\CudaUnalignedBitrotFinder/CudaUnalignedBitrotFinder.vcxproj">
+            <Project>{AC30D969-E8D4-43A5-9934-9B80310A01EE}</Project>
+            <Name>CudaUnalignedBitrotFinder</Name>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <OutputItemType>Content</OutputItemType>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </ProjectReference>
+    </ItemGroup>
 </Project>
