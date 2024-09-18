@@ -96,7 +96,7 @@
       <FastMath>true</FastMath>
       <Optimization>O3</Optimization>
       <Runtime>InheritFromHost</Runtime>
-      <CodeGeneration>compute_80,sm_80</CodeGeneration>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
     </CudaCompile>
     <CudaLink>
       <AdditionalOptions>--allow-unsupported-compiler %(AdditionalOptions)</AdditionalOptions>
